@@ -168,6 +168,27 @@ nav a:hover {
   width: 2.5rem;
 }
 
+.chip-solid {
+  background: var(--card);
+}
+
+.wip-simple {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-transform: lowercase;
+  letter-spacing: 0.12em;
+}
+
+.wip-text {
+  font-size: 1.75rem;
+  text-align: center;
+}
+
 @media (max-width: 480px) {
   .card {
     padding: 1.5rem;

@@ -1,6 +1,7 @@
 const body = document.body;
 const themeToggle = document.querySelector("[data-theme-toggle]");
 const THEME_KEY = "theme-preference";
+const media = window.matchMedia("(prefers-color-scheme: dark)");
 
 function applyTheme(mode) {
   if (mode === "dark") {
@@ -25,9 +26,8 @@ function updateToggleIcon() {
   themeToggle.setAttribute("aria-pressed", isDark ? "true" : "false");
 }
 
-if (themeToggle) {
+function initTheme() {
   const storedTheme = localStorage.getItem(THEME_KEY);
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
   const prefersDark = media.matches;
 
   if (storedTheme === "dark" || (!storedTheme && prefersDark)) {
@@ -37,16 +37,20 @@ if (themeToggle) {
   } else {
     updateToggleIcon();
   }
+}
 
-  media.addEventListener("change", (event) => {
-    if (localStorage.getItem(THEME_KEY)) {
-      return;
-    }
-    applyTheme(event.matches ? "dark" : "light");
-  });
+media.addEventListener("change", (event) => {
+  if (localStorage.getItem(THEME_KEY)) {
+    return;
+  }
+  applyTheme(event.matches ? "dark" : "light");
+});
 
+if (themeToggle) {
   themeToggle.addEventListener("click", () => {
     const nextTheme = body.dataset.theme === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
   });
 }
+
+initTheme();
