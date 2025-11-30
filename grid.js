@@ -13,6 +13,11 @@ let dpr = window.devicePixelRatio || 1;
 const root = document.documentElement;
 const quarterTurn = Math.PI / 2;
 let lineColor = "#000";
+const hoverState = {
+  marker: null,
+  point: null,
+  pointer: null,
+};
 
 function resizeCanvas() {
   width = window.innerWidth;
@@ -35,6 +40,7 @@ function resizeCanvas() {
   ctx.lineJoin = "round";
 
   initWalkers();
+  refreshHoverMarker();
 }
 
 function updateGridSize() {
@@ -90,6 +96,34 @@ function spawnWalker() {
   };
   prepareNextArc(fallback);
   return fallback;
+}
+
+function spawnWalkerAtIntersection(x, y) {
+  const alignedX = alignToGrid(x, 0, width);
+  const alignedY = alignToGrid(y, 0, height);
+  const cardinalDirections = shuffle([
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 },
+  ]);
+
+  for (let i = 0; i < cardinalDirections.length; i += 1) {
+    const walker = {
+      x: alignedX,
+      y: alignedY,
+      dir: cardinalDirections[i],
+      angle: 0,
+      arc: null,
+    };
+
+    if (prepareNextArc(walker)) {
+      walkers.push(walker);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function snapToRange(value, min, max) {
@@ -254,10 +288,99 @@ function tintExistingLines() {
   ctx.restore();
 }
 
+function initHoverInteractions() {
+  if (hoverState.marker) {
+    return;
+  }
+
+  hoverState.marker = document.createElement("div");
+  hoverState.marker.className = "hover-marker";
+  hoverState.marker.setAttribute("aria-hidden", "true");
+  document.body.appendChild(hoverState.marker);
+
+  window.addEventListener("pointermove", handlePointerMove);
+  window.addEventListener("pointerdown", handlePointerDown);
+  window.addEventListener("blur", hideHoverMarker);
+  document.addEventListener("pointerleave", handlePointerLeave);
+}
+
+function handlePointerMove(event) {
+  updateHoverPoint(event.clientX, event.clientY);
+}
+
+function handlePointerDown(event) {
+  if (event.button !== 0 || !hoverState.point) {
+    return;
+  }
+
+  const topElement = document.elementFromPoint(event.clientX, event.clientY);
+  if (topElement !== canvas) {
+    return;
+  }
+
+  spawnWalkerAtIntersection(hoverState.point.x, hoverState.point.y);
+}
+
+function handlePointerLeave() {
+  hoverState.pointer = null;
+  hideHoverMarker();
+}
+
+function updateHoverPoint(clientX, clientY) {
+  hoverState.pointer = { clientX, clientY };
+
+  const topElement = document.elementFromPoint(clientX, clientY);
+  if (!topElement || topElement !== canvas) {
+    hideHoverMarker();
+    return;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+
+  if (x < 0 || x > width || y < 0 || y > height) {
+    hideHoverMarker();
+    return;
+  }
+
+  const alignedX = alignToGrid(x, 0, width);
+  const alignedY = alignToGrid(y, 0, height);
+
+  hoverState.point = { x: alignedX, y: alignedY };
+  setHoverMarkerPosition(alignedX, alignedY);
+}
+
+function setHoverMarkerPosition(x, y) {
+  if (!hoverState.marker) {
+    return;
+  }
+
+  hoverState.marker.style.left = `${x}px`;
+  hoverState.marker.style.top = `${y}px`;
+  hoverState.marker.dataset.visible = "true";
+}
+
+function hideHoverMarker() {
+  hoverState.point = null;
+  if (hoverState.marker) {
+    hoverState.marker.dataset.visible = "false";
+  }
+}
+
+function refreshHoverMarker() {
+  if (!hoverState.marker || !hoverState.pointer) {
+    return;
+  }
+
+  updateHoverPoint(hoverState.pointer.clientX, hoverState.pointer.clientY);
+}
+
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("themechange", () => {
   updateStrokeStyle();
   tintExistingLines();
 });
 resizeCanvas();
+initHoverInteractions();
 requestAnimationFrame(step);
