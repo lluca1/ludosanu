@@ -90,6 +90,10 @@ canvas {
   font-size: 0.85rem;
 }
 
+.badge:hover {
+  cursor: url("resources/cat.svg") 8 4, pointer;
+}
+
 nav {
   display: flex;
   flex-direction: column;
