@@ -24,34 +24,12 @@ function resizeCanvas() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
-  lineColor = getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#5b4b3a";
+  updateStrokeStyle();
   ctx.lineWidth = 1.4;
-  ctx.strokeStyle = lineColor;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  drawGrid();
-
   initWalkers();
-}
-
-function drawGrid() {
-  ctx.save();
-  ctx.strokeStyle = lineColor;
-  ctx.globalAlpha = 0.18;
-  ctx.lineWidth = 1;
-  ctx.translate(0.5, 0.5);
-  ctx.beginPath();
-  for (let x = 0; x <= width; x += gridSize) {
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-  }
-  for (let y = 0; y <= height; y += gridSize) {
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-  }
-  ctx.stroke();
-  ctx.restore();
 }
 
 function initWalkers() {
@@ -232,6 +210,23 @@ function drawSegment(x1, y1, x2, y2) {
   ctx.stroke();
 }
 
+function updateStrokeStyle() {
+  lineColor = getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#5b4b3a";
+  ctx.strokeStyle = lineColor;
+}
+
+function tintExistingLines() {
+  ctx.save();
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.fillStyle = lineColor;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("themechange", () => {
+  updateStrokeStyle();
+  tintExistingLines();
+});
 resizeCanvas();
 requestAnimationFrame(step);

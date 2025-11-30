@@ -1,8 +1,15 @@
 :root {
-  --bg: #f5d8b5;
-  --card: #f9e6cc;
-  --line: #5b4b3a;
-  --text: #3e3123;
+  --bg-light: #f5d8b5;
+  --card-light: #f9e6cc;
+  --line-light: #5b4b3a;
+  --text-light: #3e3123;
+  --bg-dark: #1e1711;
+  --card-dark: #2a2119;
+  --line-dark: #cfc0a9;
+  --text-dark: #f8e9d2;
+  --grid-light: rgba(91, 75, 58, 0.18);
+  --grid-dark: rgba(207, 192, 169, 0.22);
+  --grid-size: 26px;
 }
 
 * {
@@ -12,13 +19,36 @@
 }
 
 body {
+  --bg: var(--bg-light);
+  --card: var(--card-light);
+  --line: var(--line-light);
+  --text: var(--text-light);
+  --grid: var(--grid-light);
   font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
-  background: var(--bg);
+  line-height: 1.4;
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
   min-height: 100vh;
   color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+body[data-theme="dark"] {
+  --bg: var(--bg-dark);
+  --card: var(--card-dark);
+  --line: var(--line-dark);
+  --text: var(--text-dark);
+  --grid: var(--grid-dark);
+}
+
+button,
+a {
+  font: inherit;
+  color: inherit;
 }
 
 canvas {
@@ -72,8 +102,7 @@ nav a {
   font-size: 1.25rem;
 }
 
-.card-actions,
-.card-footer {
+.card-actions {
   display: flex;
   justify-content: center;
   gap: 0.75rem;
@@ -88,20 +117,18 @@ nav a {
   text-transform: lowercase;
   cursor: pointer;
   transition: transform 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chip:hover {
   transform: translateY(-2px);
 }
 
-.chip.ghost {
-  border-style: dashed;
-}
-
-.glyphs {
-  border: 2px solid var(--line);
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
+.chip.theme-toggle {
+  min-width: 2.5rem;
 }
 
 @media (max-width: 480px) {
