@@ -9,6 +9,7 @@ let width = 0;
 let height = 0;
 let dpr = window.devicePixelRatio || 1;
 const quarterTurn = Math.PI / 2;
+let lineColor = "#000";
 
 function resizeCanvas() {
   width = window.innerWidth;
@@ -23,12 +24,34 @@ function resizeCanvas() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
+  lineColor = getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#5b4b3a";
   ctx.lineWidth = 1.4;
-  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--line");
+  ctx.strokeStyle = lineColor;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  drawGrid();
+
   initWalkers();
+}
+
+function drawGrid() {
+  ctx.save();
+  ctx.strokeStyle = lineColor;
+  ctx.globalAlpha = 0.18;
+  ctx.lineWidth = 1;
+  ctx.translate(0.5, 0.5);
+  ctx.beginPath();
+  for (let x = 0; x <= width; x += gridSize) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+  }
+  for (let y = 0; y <= height; y += gridSize) {
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function initWalkers() {
