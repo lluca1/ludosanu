@@ -1,0 +1,111 @@
+:root {
+  --bg: #f5d8b5;
+  --card: #f9e6cc;
+  --line: #5b4b3a;
+  --text: #3e3123;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  width: min(90vw, 420px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+}
+
+.card {
+  width: 100%;
+  border: 2px solid var(--line);
+  background: var(--card);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-transform: lowercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.badge {
+  border: 2px solid var(--line);
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--text);
+  font-size: 1.25rem;
+}
+
+.card-actions,
+.card-footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 2px solid var(--line);
+  padding: 0.35rem 0.9rem;
+  background: transparent;
+  font-size: 0.85rem;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+}
+
+.chip.ghost {
+  border-style: dashed;
+}
+
+.glyphs {
+  border: 2px solid var(--line);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1.5rem;
+  }
+}
