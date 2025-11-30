@@ -1,13 +1,16 @@
 const canvas = document.getElementById("gridCanvas");
 const ctx = canvas.getContext("2d");
 
-const gridSize = 26;
-const speed = 2;
-const maxWalkers = 2;
+const BASE_GRID_SIZE = 26;
+let gridSize = BASE_GRID_SIZE;
+const EDGE_EPSILON = 0.5;
+const speed = 1;
+const maxWalkers = 8;
 const walkers = [];
 let width = 0;
 let height = 0;
 let dpr = window.devicePixelRatio || 1;
+const root = document.documentElement;
 const quarterTurn = Math.PI / 2;
 let lineColor = "#000";
 
@@ -21,6 +24,8 @@ function resizeCanvas() {
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
 
+  updateGridSize();
+
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
@@ -32,6 +37,12 @@ function resizeCanvas() {
   initWalkers();
 }
 
+function updateGridSize() {
+  const minColumns = Math.max(3, Math.round(width / BASE_GRID_SIZE));
+  gridSize = width / minColumns;
+  root.style.setProperty("--grid-size", `${gridSize}px`);
+}
+
 function initWalkers() {
   walkers.length = 0;
   for (let i = 0; i < maxWalkers; i += 1) {
@@ -41,7 +52,8 @@ function initWalkers() {
 
 function spawnWalker() {
   for (let attempts = 0; attempts < 12; attempts += 1) {
-    const edge = Math.floor(Math.random() * 4);
+    const allowedEdges = [0, 2];
+    const edge = allowedEdges[Math.floor(Math.random() * allowedEdges.length)];
     let x = 0;
     let y = 0;
     let dir = { dx: 0, dy: 0 };
@@ -50,18 +62,10 @@ function spawnWalker() {
       x = snapToRange(Math.random() * width, 0, width);
       y = 0;
       dir = { dx: 0, dy: 1 };
-    } else if (edge === 1) {
-      x = snapToRange(Math.random() * width, 0, width);
-      y = height;
-      dir = { dx: 0, dy: -1 };
     } else if (edge === 2) {
       x = 0;
       y = snapToRange(Math.random() * height, 0, height);
       dir = { dx: 1, dy: 0 };
-    } else {
-      x = width;
-      y = snapToRange(Math.random() * height, 0, height);
-      dir = { dx: -1, dy: 0 };
     }
 
     const walker = {
@@ -78,8 +82,8 @@ function spawnWalker() {
   }
 
   const fallback = {
-    x: width / 2,
-    y: height / 2,
+    x: snapToRange(Math.random() * width, 0, width),
+    y: 0,
     dir: { dx: 0, dy: 1 },
     angle: 0,
     arc: null,
@@ -92,8 +96,29 @@ function snapToRange(value, min, max) {
   const span = max - min;
   if (span <= 0) return min;
   const snappedOffset = Math.round((value - min) / gridSize) * gridSize;
-  const clampedOffset = Math.min(Math.max(snappedOffset, 0), span);
+  const gridMaxOffset = Math.floor(span / gridSize) * gridSize;
+  const clampedOffset = Math.min(Math.max(snappedOffset, 0), gridMaxOffset);
   return min + clampedOffset;
+}
+
+function alignToGrid(value, min = 0, max = Infinity) {
+  const lower = Math.min(min, max);
+  const upper = Math.max(min, max);
+  const span = upper - lower;
+  if (!Number.isFinite(span) || span <= 0) {
+    return lower;
+  }
+
+  if (value <= lower + EDGE_EPSILON) {
+    return lower;
+  }
+  if (value >= upper - EDGE_EPSILON) {
+    return upper;
+  }
+
+  const snapped = Math.round((value - lower) / gridSize) * gridSize + lower;
+  const gridMax = upper - ((span % gridSize) || 0);
+  return Math.min(Math.max(snapped, lower), gridMax);
 }
 
 function step() {
@@ -134,8 +159,8 @@ function advanceWalker(walker, index) {
 }
 
 function finalizeArc(walker, index) {
-  walker.x = walker.arc.endX;
-  walker.y = walker.arc.endY;
+  walker.x = alignToGrid(walker.arc.endX, 0, width);
+  walker.y = alignToGrid(walker.arc.endY, 0, height);
   walker.dir = walker.arc.turnDir === 1 ? rotateCW(walker.dir) : rotateCCW(walker.dir);
 
   if (!prepareNextArc(walker)) {
@@ -171,7 +196,13 @@ function createArc(walker, turnDir) {
   const endX = centerX + gridSize * Math.cos(endAngle);
   const endY = centerY + gridSize * Math.sin(endAngle);
 
-  if (endX < 0 || endX > width || endY < 0 || endY > height) {
+  const boundaryMargin = EDGE_EPSILON;
+  if (
+    endX < -boundaryMargin ||
+    endX > width + boundaryMargin ||
+    endY < -boundaryMargin ||
+    endY > height + boundaryMargin
+  ) {
     return null;
   }
 

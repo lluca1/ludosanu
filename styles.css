@@ -18,6 +18,11 @@
   padding: 0;
 }
 
+::selection {
+  background: #ffffff;
+  color: #000000;
+}
+
 body {
   --bg: var(--bg-light);
   --card: var(--card-light);
@@ -98,12 +103,22 @@ nav {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  align-items: center;
 }
 
 nav a {
   text-decoration: none;
   color: var(--text);
   font-size: 1.25rem;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+nav a:hover {
+  transform: translateY(-2px);
 }
 
 .card-actions {
@@ -132,7 +147,7 @@ nav a {
 }
 
 .chip.theme-toggle {
-  min-width: 2.5rem;
+  width: 2.5rem;
 }
 
 @media (max-width: 480px) {
