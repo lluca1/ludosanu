@@ -29,6 +29,49 @@ const INTERACTIVE_SELECTOR = [
   "button",
   "a",
 ].join(", ");
+const CARDINAL_DIRECTIONS = [
+  { dx: 1, dy: 0 },
+  { dx: -1, dy: 0 },
+  { dx: 0, dy: 1 },
+  { dx: 0, dy: -1 },
+];
+const EDGE_SPAWNERS = [
+  () => ({
+    x: snapToRange(Math.random() * (width / 2), 0, width / 2),
+    y: 0,
+    dir: { dx: 0, dy: 1 },
+  }),
+  () => ({
+    x: 0,
+    y: snapToRange(Math.random() * (height / 2), 0, height / 2),
+    dir: { dx: 1, dy: 0 },
+  }),
+];
+const BLOCKED_SCROLL_KEYS = new Set([
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "PageUp",
+  "PageDown",
+  "Home",
+  "End",
+  " ",
+]);
+
+function randomItem(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function createWalkerFromSpawn(spawnPoint) {
+  return {
+    x: spawnPoint.x,
+    y: spawnPoint.y,
+    dir: { dx: spawnPoint.dir.dx, dy: spawnPoint.dir.dy },
+    angle: 0,
+    arc: null,
+  };
+}
 
 function isInteractiveElement(element) {
   if (!element) {
@@ -79,44 +122,13 @@ function initWalkers() {
 
 function spawnWalker() {
   for (let attempts = 0; attempts < 12; attempts += 1) {
-    const allowedEdges = [0, 2];
-    const edge = allowedEdges[Math.floor(Math.random() * allowedEdges.length)];
-    let x = 0;
-    let y = 0;
-    let dir = { dx: 0, dy: 0 };
-    const halfWidth = width / 2;
-    const halfHeight = height / 2;
-
-    if (edge === 0) {
-      x = snapToRange(Math.random() * halfWidth, 0, halfWidth);
-      y = 0;
-      dir = { dx: 0, dy: 1 };
-    } else if (edge === 2) {
-      x = 0;
-      y = snapToRange(Math.random() * halfHeight, 0, halfHeight);
-      dir = { dx: 1, dy: 0 };
-    }
-
-    const walker = {
-      x,
-      y,
-      dir,
-      angle: 0,
-      arc: null,
-    };
-
+    const walker = createWalkerFromSpawn(randomItem(EDGE_SPAWNERS)());
     if (prepareNextArc(walker)) {
       return walker;
     }
   }
 
-  const fallback = {
-    x: snapToRange(Math.random() * (width / 2), 0, width / 2),
-    y: 0,
-    dir: { dx: 0, dy: 1 },
-    angle: 0,
-    arc: null,
-  };
+  const fallback = createWalkerFromSpawn(EDGE_SPAWNERS[0]());
   prepareNextArc(fallback);
   return fallback;
 }
@@ -124,18 +136,14 @@ function spawnWalker() {
 function spawnWalkerAtIntersection(x, y) {
   const alignedX = alignToGrid(x, 0, width);
   const alignedY = alignToGrid(y, 0, height);
-  const cardinalDirections = shuffle([
-    { dx: 1, dy: 0 },
-    { dx: -1, dy: 0 },
-    { dx: 0, dy: 1 },
-    { dx: 0, dy: -1 },
-  ]);
+  const cardinalDirections = shuffle(CARDINAL_DIRECTIONS.slice());
 
   for (let i = 0; i < cardinalDirections.length; i += 1) {
+    const dir = cardinalDirections[i];
     const walker = {
       x: alignedX,
       y: alignedY,
-      dir: cardinalDirections[i],
+      dir: { dx: dir.dx, dy: dir.dy },
       angle: 0,
       arc: null,
     };
@@ -418,8 +426,7 @@ function initScrollGuards() {
   window.addEventListener(
     "keydown",
     (event) => {
-      const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End", " "];
-      if (keys.includes(event.key)) {
+      if (BLOCKED_SCROLL_KEYS.has(event.key)) {
         event.preventDefault();
       }
     },
