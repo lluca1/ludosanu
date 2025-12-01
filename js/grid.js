@@ -14,6 +14,8 @@ let dpr = window.devicePixelRatio || 1;
 const root = document.documentElement;
 const quarterTurn = Math.PI / 2;
 let lineColor = "#000";
+let gridColor = "rgba(91, 75, 58, 0.18)";
+const GRID_LINE_WIDTH = 1;
 const hoverState = {
   marker: null,
   point: null,
@@ -56,6 +58,7 @@ function resizeCanvas() {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
   updateStrokeStyle();
+  drawGridBackground();
   ctx.lineWidth = 1.4;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -299,7 +302,9 @@ function drawSegment(x1, y1, x2, y2) {
 }
 
 function updateStrokeStyle() {
-  lineColor = getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#5b4b3a";
+  const styles = getComputedStyle(document.documentElement);
+  lineColor = styles.getPropertyValue("--line").trim() || "#5b4b3a";
+  gridColor = styles.getPropertyValue("--grid").trim() || "rgba(91, 75, 58, 0.18)";
   ctx.strokeStyle = lineColor;
 }
 
@@ -308,6 +313,41 @@ function tintExistingLines() {
   ctx.globalCompositeOperation = "source-atop";
   ctx.fillStyle = lineColor;
   ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
+function drawGridBackground(compositeMode = "source-over") {
+  ctx.save();
+  ctx.globalCompositeOperation = compositeMode;
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = GRID_LINE_WIDTH;
+  ctx.beginPath();
+  for (let x = 0; x <= width; x += gridSize) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+  }
+  for (let y = 0; y <= height; y += gridSize) {
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function removeGridBackground() {
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.lineWidth = GRID_LINE_WIDTH + 0.5;
+  ctx.beginPath();
+  for (let x = 0; x <= width; x += gridSize) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+  }
+  for (let y = 0; y <= height; y += gridSize) {
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+  }
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -428,8 +468,10 @@ function initScrollGuards() {
 
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("themechange", () => {
+  removeGridBackground();
   updateStrokeStyle();
   tintExistingLines();
+  drawGridBackground("destination-over");
 });
 resizeCanvas();
 initHoverInteractions();
