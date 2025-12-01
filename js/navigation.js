@@ -1,4 +1,4 @@
-const SCROLL_DURATION = 800;
+const SCROLL_DURATION = 700;
 let scrollAnimation = null;
 
 function goToPage(x, y) {
@@ -22,8 +22,8 @@ function smoothScrollTo(element, targetX, targetY, duration = 600) {
   if (deltaX === 0 && deltaY === 0) {
     return;
   }
-
-  const ease = (t) => 0.5 - Math.cos(Math.PI * t) / 2;
+  // const ease = (t) => 0.5 - Math.cos(Math.PI * t) / 2; // cosine easing
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2); // cubic easing
   let startTime = null;
 
   if (scrollAnimation) {
