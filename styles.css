@@ -8,7 +8,7 @@
   --line-dark: #cfc0a9;
   --text-dark: #f8e9d2;
   --grid-light: rgba(91, 75, 58, 0.18);
-  --grid-dark: rgba(207, 192, 169, 0.10);
+  --grid-dark: rgba(207, 192, 169, 0.1);
   --grid-size: 26px;
 }
 
@@ -37,9 +37,7 @@ body {
   background-size: var(--grid-size) var(--grid-size);
   min-height: 100vh;
   color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
 }
 
 body[data-theme="dark"] {
@@ -56,11 +54,36 @@ a {
   color: inherit;
 }
 
+#viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  scroll-snap-type: both mandatory;
+  scrollbar-width: none;
+  overscroll-behavior: none;
+  scroll-behavior: smooth;
+}
+
+#viewport::-webkit-scrollbar {
+  display: none;
+}
+
+#grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 100vw 100vw;
+  grid-template-rows: 100vh 100vh;
+  width: 200vw;
+  height: 200vh;
+}
+
 canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200vw;
+  height: 200vh;
   z-index: 0;
 }
 
@@ -71,7 +94,7 @@ canvas {
   border: 2px solid var(--line);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 0;
+  z-index: 5;
   opacity: 0;
   transition: opacity 0.15s ease;
   transform: translate(-50%, -50%);
@@ -82,18 +105,22 @@ canvas {
   opacity: 1;
 }
 
-.hero {
+#grid .panel {
+  width: 100vw;
+  height: 100vh;
   position: relative;
-  z-index: 1;
-  width: min(90vw, 420px);
+  z-index: 10;
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 3rem 1rem;
+  justify-content: center;
+  padding: 3rem;
+  pointer-events: none;
+  scroll-snap-align: start;
 }
 
+.panel-content,
 .card {
-  width: 100%;
+  width: min(90vw, 420px);
   border: 2px solid var(--line);
   background: var(--card);
   padding: 2.5rem 2rem;
@@ -103,6 +130,7 @@ canvas {
   text-transform: lowercase;
   letter-spacing: 0.08em;
   text-align: center;
+  pointer-events: auto;
 }
 
 .badge {
@@ -117,25 +145,26 @@ canvas {
   cursor: url("resources/cat.svg") 8 4, pointer;
 }
 
-nav {
+.card-nav {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   align-items: center;
 }
 
-nav a {
-  text-decoration: none;
+.card-nav button {
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
   color: var(--text);
   font-size: 1.25rem;
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-nav a:hover {
+.card-nav button:hover {
   transform: translateY(-2px);
 }
 
@@ -146,7 +175,8 @@ nav a:hover {
   flex-wrap: wrap;
 }
 
-.chip {
+.chip,
+.quadrant-nav button {
   border: 2px solid var(--line);
   padding: 0.35rem 0.9rem;
   background: transparent;
@@ -160,7 +190,8 @@ nav a:hover {
   justify-content: center;
 }
 
-.chip:hover {
+.chip:hover,
+.quadrant-nav button:hover {
   transform: translateY(-2px);
 }
 
@@ -172,25 +203,37 @@ nav a:hover {
   background: var(--card);
 }
 
-.wip-simple {
-  min-height: 100vh;
-  width: 100%;
+.quadrant-nav {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  text-transform: lowercase;
-  letter-spacing: 0.12em;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(1px);
+  border: 2px solid var(--line);
+  padding: 0.75rem;
 }
 
-.wip-text {
-  font-size: 1.75rem;
-  text-align: center;
+.quadrant-nav button {
+  width: 100%;
+  background: var(--card);
 }
 
 @media (max-width: 480px) {
+  .panel-content,
   .card {
     padding: 1.5rem;
+  }
+
+  #grid .panel {
+    padding: 1.5rem;
+  }
+
+  .quadrant-nav {
+    right: 0.5rem;
+    top: 0.5rem;
   }
 }

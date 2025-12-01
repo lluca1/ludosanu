@@ -1,37 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ludosanu luca</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="resources/cat.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <canvas id="gridCanvas" role="presentation" aria-hidden="true"></canvas>
 
-    <main class="hero">
-      <section class="card" aria-label="Intro navigation">
-        <p class="badge">welcome</p>
-        <nav>
-          <a href="/wip/">about</a>
-          <a href="/wip/">portfolio</a>
-          <a href="/wip/">blog</a>
-        </nav>
-        <div class="card-actions">
-          <a class="chip" href="https://github.com/lluca1" target="_blank" rel="noopener noreferrer">github</a>
-          <button class="chip theme-toggle" aria-label="Toggle theme" data-theme-toggle>☾</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ludosanu luca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="resources/cat.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <nav class="quadrant-nav" aria-label="Quadrant navigation">
+    <button type="button" onclick="goToPage(0, 0)">home</button>
+    <button type="button" onclick="goToPage(1, 0)">about</button>
+    <button type="button" onclick="goToPage(0, 1)">portfolio</button>
+    <button type="button" onclick="goToPage(1, 1)">blog</button>
+  </nav>
+
+  <div id="viewport">
+    <canvas id="gridCanvas" role="presentation" aria-hidden="true"></canvas>
+    <div id="grid">
+      <section id="page1" class="panel hero" aria-labelledby="page1-title">
+        <div class="card">
+          <p class="badge" id="page1-title">welcome</p>
+          <nav class="card-nav">
+            <button type="button" onclick="goToPage(1, 0)">about</button>
+            <button type="button" onclick="goToPage(0, 1)">portfolio</button>
+            <button type="button" onclick="goToPage(1, 1)">blog</button>
+          </nav>
+          <div class="card-actions">
+            <a class="chip" href="https://github.com/lluca1" target="_blank" rel="noopener noreferrer">github</a>
+            <button class="chip theme-toggle" aria-label="Toggle theme" data-theme-toggle>
+              ☾
+            </button>
+          </div>
         </div>
       </section>
-    </main>
 
-    <script src="theme.js" defer></script>
-    <script src="grid.js" defer></script>
-  </body>
+      <section id="page2" class="panel" aria-labelledby="page2-title">
+        <div class="panel-content">
+          <p class="badge" id="page2-title">about</p>
+          <p>
+            lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          </p>
+          <button class="chip" type="button" onclick="goToPage(0, 0)">
+            back home
+          </button>
+        </div>
+      </section>
+
+      <section id="page3" class="panel" aria-labelledby="page3-title">
+        <div class="panel-content">
+          <p class="badge" id="page3-title">portfolio</p>
+          <p>
+            lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          </p>
+          <button class="chip" type="button" onclick="goToPage(0, 0)">
+            back home
+          </button>
+        </div>
+      </section>
+
+      <section id="page4" class="panel" aria-labelledby="page4-title">
+        <div class="panel-content">
+          <p class="badge" id="page4-title">blog</p>
+          <p>
+            lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          </p>
+          <button class="chip" type="button" onclick="goToPage(0, 0)">
+            back home
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function goToPage(x, y) {
+      document.getElementById("viewport").scrollTo({
+        left: x * window.innerWidth,
+        top: y * window.innerHeight,
+        behavior: "smooth",
+      });
+    }
+  </script>
+  <script src="theme.js" defer></script>
+  <script src="grid.js" defer></script>
+</body>
+
 </html>

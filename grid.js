@@ -1,5 +1,6 @@
 const canvas = document.getElementById("gridCanvas");
 const ctx = canvas.getContext("2d");
+const viewport = document.getElementById("viewport");
 
 const BASE_GRID_SIZE = 26;
 let gridSize = BASE_GRID_SIZE;
@@ -18,10 +19,30 @@ const hoverState = {
   point: null,
   pointer: null,
 };
+const INTERACTIVE_SELECTOR = [
+  ".card",
+  ".panel-content",
+  ".quadrant-nav",
+  ".card-actions",
+  ".card-nav",
+  "[data-theme-toggle]",
+  "button",
+  "a",
+].join(", ");
+
+function isInteractiveElement(element) {
+  if (!element) {
+    return false;
+  }
+  return Boolean(element.closest(INTERACTIVE_SELECTOR));
+}
 
 function resizeCanvas() {
-  width = window.innerWidth;
-  height = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  width = viewportWidth * 2;
+  height = viewportHeight * 2;
   dpr = window.devicePixelRatio || 1;
 
   canvas.width = width * dpr;
@@ -63,14 +84,16 @@ function spawnWalker() {
     let x = 0;
     let y = 0;
     let dir = { dx: 0, dy: 0 };
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
 
     if (edge === 0) {
-      x = snapToRange(Math.random() * width, 0, width);
+      x = snapToRange(Math.random() * halfWidth, 0, halfWidth);
       y = 0;
       dir = { dx: 0, dy: 1 };
     } else if (edge === 2) {
       x = 0;
-      y = snapToRange(Math.random() * height, 0, height);
+      y = snapToRange(Math.random() * halfHeight, 0, halfHeight);
       dir = { dx: 1, dy: 0 };
     }
 
@@ -88,7 +111,7 @@ function spawnWalker() {
   }
 
   const fallback = {
-    x: snapToRange(Math.random() * width, 0, width),
+    x: snapToRange(Math.random() * (width / 2), 0, width / 2),
     y: 0,
     dir: { dx: 0, dy: 1 },
     angle: 0,
@@ -314,7 +337,7 @@ function handlePointerDown(event) {
   }
 
   const topElement = document.elementFromPoint(event.clientX, event.clientY);
-  if (topElement !== canvas) {
+  if (isInteractiveElement(topElement)) {
     return;
   }
 
@@ -330,7 +353,7 @@ function updateHoverPoint(clientX, clientY) {
   hoverState.pointer = { clientX, clientY };
 
   const topElement = document.elementFromPoint(clientX, clientY);
-  if (!topElement || topElement !== canvas) {
+  if (!topElement || isInteractiveElement(topElement)) {
     hideHoverMarker();
     return;
   }
@@ -356,8 +379,11 @@ function setHoverMarkerPosition(x, y) {
     return;
   }
 
-  hoverState.marker.style.left = `${x}px`;
-  hoverState.marker.style.top = `${y}px`;
+  const offsetX = x - (viewport ? viewport.scrollLeft : 0);
+  const offsetY = y - (viewport ? viewport.scrollTop : 0);
+
+  hoverState.marker.style.left = `${offsetX}px`;
+  hoverState.marker.style.top = `${offsetY}px`;
   hoverState.marker.dataset.visible = "true";
 }
 
@@ -376,6 +402,30 @@ function refreshHoverMarker() {
   updateHoverPoint(hoverState.pointer.clientX, hoverState.pointer.clientY);
 }
 
+function initScrollGuards() {
+  if (!viewport) {
+    return;
+  }
+
+  const blockScroll = (event) => {
+    event.preventDefault();
+  };
+
+  viewport.addEventListener("wheel", blockScroll, { passive: false });
+  viewport.addEventListener("touchmove", blockScroll, { passive: false });
+
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End", " "];
+      if (keys.includes(event.key)) {
+        event.preventDefault();
+      }
+    },
+    true
+  );
+}
+
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("themechange", () => {
   updateStrokeStyle();
@@ -383,4 +433,5 @@ window.addEventListener("themechange", () => {
 });
 resizeCanvas();
 initHoverInteractions();
+initScrollGuards();
 requestAnimationFrame(step);
