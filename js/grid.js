@@ -14,6 +14,8 @@ let dpr = window.devicePixelRatio || 1;
 const root = document.documentElement;
 const quarterTurn = Math.PI / 2;
 let lineColor = "#000";
+let resizeHandle = null;
+let pointerSpawnInitialized = false;
 const hoverState = {
   marker: null,
   point: null,
@@ -59,8 +61,36 @@ const BLOCKED_SCROLL_KEYS = new Set([
   " ",
 ]);
 
+function getViewportMetrics() {
+  const visualViewport = window.visualViewport;
+  const width = Math.round(visualViewport ? visualViewport.width : window.innerWidth || document.documentElement.clientWidth || 1);
+  const height = Math.round(visualViewport ? visualViewport.height : window.innerHeight || document.documentElement.clientHeight || 1);
+  return {
+    width: Math.max(width, 1),
+    height: Math.max(height, 1),
+  };
+}
+
+function applyViewportMetrics(metrics) {
+  root.style.setProperty("--viewport-width", `${metrics.width}px`);
+  root.style.setProperty("--viewport-height", `${metrics.height}px`);
+}
+
 function randomItem(array) {
   return array[Math.floor(Math.random() * array.length)];
+}
+
+function getAlignedPointFromClientCoords(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+  if (x < 0 || x > width || y < 0 || y > height) {
+    return null;
+  }
+  return {
+    x: alignToGrid(x, 0, width),
+    y: alignToGrid(y, 0, height),
+  };
 }
 
 function createWalkerFromSpawn(spawnPoint) {
@@ -81,8 +111,10 @@ function isInteractiveElement(element) {
 }
 
 function resizeCanvas() {
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
+  const metrics = getViewportMetrics();
+  applyViewportMetrics(metrics);
+  const viewportWidth = metrics.width;
+  const viewportHeight = metrics.height;
 
   width = viewportWidth * 2;
   height = viewportHeight * 2;
@@ -105,6 +137,16 @@ function resizeCanvas() {
 
   initWalkers();
   refreshHoverMarker();
+}
+
+function scheduleCanvasResize() {
+  if (resizeHandle !== null) {
+    cancelAnimationFrame(resizeHandle);
+  }
+  resizeHandle = requestAnimationFrame(() => {
+    resizeHandle = null;
+    resizeCanvas();
+  });
 }
 
 function updateGridSize() {
@@ -321,7 +363,7 @@ function tintExistingLines() {
 
 
 function initHoverInteractions() {
-  if (hoverState.marker) {
+  if (hoverState.marker || !supportsHoverInteractions()) {
     return;
   }
 
@@ -331,9 +373,23 @@ function initHoverInteractions() {
   document.body.appendChild(hoverState.marker);
 
   window.addEventListener("pointermove", handlePointerMove);
-  window.addEventListener("pointerdown", handlePointerDown);
   window.addEventListener("blur", hideHoverMarker);
   document.addEventListener("pointerleave", handlePointerLeave);
+}
+
+function initPointerSpawns() {
+  if (pointerSpawnInitialized) {
+    return;
+  }
+  pointerSpawnInitialized = true;
+  window.addEventListener("pointerdown", handlePointerDown);
+}
+
+function supportsHoverInteractions() {
+  if (!window.matchMedia) {
+    return true;
+  }
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
 function handlePointerMove(event) {
@@ -341,7 +397,7 @@ function handlePointerMove(event) {
 }
 
 function handlePointerDown(event) {
-  if (event.button !== 0 || !hoverState.point) {
+  if (event.button !== 0) {
     return;
   }
 
@@ -350,7 +406,14 @@ function handlePointerDown(event) {
     return;
   }
 
-  spawnWalkerAtIntersection(hoverState.point.x, hoverState.point.y);
+  let spawnPoint = hoverState.point;
+  if (!spawnPoint) {
+    spawnPoint = getAlignedPointFromClientCoords(event.clientX, event.clientY);
+  }
+
+  if (spawnPoint) {
+    spawnWalkerAtIntersection(spawnPoint.x, spawnPoint.y);
+  }
 }
 
 function handlePointerLeave() {
@@ -367,20 +430,14 @@ function updateHoverPoint(clientX, clientY) {
     return;
   }
 
-  const rect = canvas.getBoundingClientRect();
-  const x = clientX - rect.left;
-  const y = clientY - rect.top;
-
-  if (x < 0 || x > width || y < 0 || y > height) {
+  const alignedPoint = getAlignedPointFromClientCoords(clientX, clientY);
+  if (!alignedPoint) {
     hideHoverMarker();
     return;
   }
 
-  const alignedX = alignToGrid(x, 0, width);
-  const alignedY = alignToGrid(y, 0, height);
-
-  hoverState.point = { x: alignedX, y: alignedY };
-  setHoverMarkerPosition(alignedX, alignedY);
+  hoverState.point = alignedPoint;
+  setHoverMarkerPosition(alignedPoint.x, alignedPoint.y);
 }
 
 function setHoverMarkerPosition(x, y) {
@@ -421,7 +478,11 @@ function initScrollGuards() {
   };
 
   viewport.addEventListener("wheel", blockScroll, { passive: false });
-  viewport.addEventListener("touchmove", blockScroll, { passive: false });
+
+  const allowsCoarseScroll = window.matchMedia ? window.matchMedia("(pointer: coarse)").matches : false;
+  if (!allowsCoarseScroll) {
+    viewport.addEventListener("touchmove", blockScroll, { passive: false });
+  }
 
   window.addEventListener(
     "keydown",
@@ -434,12 +495,16 @@ function initScrollGuards() {
   );
 }
 
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize", scheduleCanvasResize);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", scheduleCanvasResize);
+}
 window.addEventListener("themechange", () => {
   updateStrokeStyle();
   tintExistingLines();
 });
 resizeCanvas();
 initHoverInteractions();
+initPointerSpawns();
 initScrollGuards();
 requestAnimationFrame(step);

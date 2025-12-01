@@ -7,8 +7,10 @@ function goToPage(x, y) {
     return;
   }
 
-  const targetX = x * window.innerWidth;
-  const targetY = y * window.innerHeight;
+  const viewportWidth = viewport.clientWidth || window.innerWidth;
+  const viewportHeight = viewport.clientHeight || window.innerHeight;
+  const targetX = x * viewportWidth;
+  const targetY = y * viewportHeight;
   smoothScrollTo(viewport, targetX, targetY, SCROLL_DURATION);
 }
 
