@@ -65,6 +65,10 @@ a {
   scroll-behavior: smooth;
 }
 
+#viewport.is-animating {
+  scroll-snap-type: none;
+}
+
 #viewport::-webkit-scrollbar {
   display: none;
 }
