@@ -19,8 +19,13 @@
 }
 
 ::selection {
-  background: #ffffff;
-  color: #000000;
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+body[data-theme="dark"] ::selection {
+  background: var(--bg-light);
+  color: var(--text-light);
 }
 
 body {
