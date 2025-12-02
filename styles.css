@@ -150,6 +150,10 @@ canvas {
   pointer-events: auto;
 }
 
+#page2 .panel-content {
+  width: min(90vw, 520px);
+}
+
 .badge {
   border: 2px solid var(--line);
   width: fit-content;
