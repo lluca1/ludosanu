@@ -21,6 +21,8 @@ const hoverState = {
   point: null,
   pointer: null,
 };
+const GRID_INTERACTION_ATTR = "data-grid-interacting";
+let gridInteractionActive = false;
 const INTERACTIVE_SELECTOR = [
   ".card",
   ".panel-content",
@@ -60,6 +62,33 @@ const BLOCKED_SCROLL_KEYS = new Set([
   "End",
   " ",
 ]);
+
+function setGridInteractionState(isActive) {
+  const body = document.body;
+  if (!body) {
+    return;
+  }
+
+  if (isActive) {
+    if (gridInteractionActive) {
+      return;
+    }
+    gridInteractionActive = true;
+    body.setAttribute(GRID_INTERACTION_ATTR, "true");
+    return;
+  }
+
+  if (!gridInteractionActive) {
+    return;
+  }
+
+  gridInteractionActive = false;
+  body.removeAttribute(GRID_INTERACTION_ATTR);
+}
+
+function handleGridPointerRelease() {
+  setGridInteractionState(false);
+}
 
 function getViewportMetrics() {
   const visualViewport = window.visualViewport;
@@ -383,6 +412,9 @@ function initPointerSpawns() {
   }
   pointerSpawnInitialized = true;
   window.addEventListener("pointerdown", handlePointerDown);
+  window.addEventListener("pointerup", handleGridPointerRelease);
+  window.addEventListener("pointercancel", handleGridPointerRelease);
+  window.addEventListener("blur", handleGridPointerRelease);
 }
 
 function supportsHoverInteractions() {
@@ -403,8 +435,11 @@ function handlePointerDown(event) {
 
   const topElement = document.elementFromPoint(event.clientX, event.clientY);
   if (isInteractiveElement(topElement)) {
+    handleGridPointerRelease();
     return;
   }
+
+  setGridInteractionState(true);
 
   let spawnPoint = hoverState.point;
   if (!spawnPoint) {
@@ -418,6 +453,7 @@ function handlePointerDown(event) {
 
 function handlePointerLeave() {
   hoverState.pointer = null;
+  handleGridPointerRelease();
   hideHoverMarker();
 }
 

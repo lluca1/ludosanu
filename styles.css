@@ -52,6 +52,12 @@ body[data-theme="dark"] {
   --grid: var(--grid-dark);
 }
 
+body[data-grid-interacting="true"],
+body[data-grid-interacting="true"] * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 button,
 a {
   font: inherit;
