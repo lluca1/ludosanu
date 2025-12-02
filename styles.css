@@ -227,9 +227,6 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(1px);
-  border: 2px solid var(--line);
   padding: 0.75rem;
 }
 
