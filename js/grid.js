@@ -160,7 +160,6 @@ function resizeCanvas() {
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, width, height);
   updateStrokeStyle();
-  ctx.lineWidth = 1.4;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
@@ -375,8 +374,11 @@ function drawSegment(x1, y1, x2, y2) {
 }
 
 function updateStrokeStyle() {
-  lineColor = getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#5b4b3a";
+  const styles = getComputedStyle(document.documentElement);
+  lineColor = styles.getPropertyValue("--line").trim() || "#5b4b3a";
+  const borderWidth = parseFloat(styles.getPropertyValue("--border-width"));
   ctx.strokeStyle = lineColor;
+  ctx.lineWidth = Number.isFinite(borderWidth) ? borderWidth : 2;
 }
 
 function tintExistingLines() {
