@@ -145,7 +145,6 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  text-transform: lowercase;
   letter-spacing: 0.08em;
   text-align: center;
   pointer-events: auto;
@@ -199,7 +198,6 @@ canvas {
   padding: 0.35rem 0.9rem;
   background: transparent;
   font-size: 0.85rem;
-  text-transform: lowercase;
   cursor: pointer;
   transition: transform 0.2s ease;
   text-decoration: none;
