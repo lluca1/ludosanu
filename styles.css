@@ -150,8 +150,33 @@ canvas {
   pointer-events: auto;
 }
 
-#page2 .panel-content {
-  width: min(90vw, 520px);
+.bio-panel {
+  width: min(95vw, 640px);
+  padding: clamp(2.5rem, 4vw, 3.75rem);
+  text-align: left;
+  gap: 2rem;
+}
+
+.bio-panel .badge {
+  margin: 0;
+}
+
+.bio-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 1.1rem;
+  line-height: 1.9;
+  letter-spacing: 0.05em;
+}
+
+.bio-highlight {
+  font-size: clamp(1.4rem, 4vw, 1.75rem);
+  font-weight: 500;
+}
+
+.bio-panel .chip {
+  align-self: flex-start;
 }
 
 .badge {
