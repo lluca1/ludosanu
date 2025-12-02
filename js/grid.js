@@ -6,7 +6,7 @@ const BASE_GRID_SIZE = 26;
 let gridSize = BASE_GRID_SIZE;
 const EDGE_EPSILON = 0.5;
 const speed = 1;
-const maxWalkers = 8;
+const initialWalkerCount = 8;
 const walkers = [];
 let width = 0;
 let height = 0;
@@ -186,7 +186,7 @@ function updateGridSize() {
 
 function initWalkers() {
   walkers.length = 0;
-  for (let i = 0; i < maxWalkers; i += 1) {
+  for (let i = 0; i < initialWalkerCount; i += 1) {
     walkers.push(spawnWalker());
   }
 }
@@ -303,9 +303,6 @@ function finalizeArc(walker, index) {
     walkers[index] = spawnWalker();
   }
 
-  if (Math.random() < 0.2 && walkers.length < maxWalkers) {
-    walkers.push(spawnWalker());
-  }
 }
 
 function prepareNextArc(walker) {
