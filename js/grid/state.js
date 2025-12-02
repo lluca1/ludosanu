@@ -14,8 +14,8 @@ export const config = {
   BASE_GRID_SIZE: 26,
   EDGE_EPSILON: 0.5,
   SPEED: 1,
-  INITIAL_WALKER_COUNT: 8,
-  QUARTER_TURN: Math.PI / 2,
+  INITIAL_WALKER_COUNT: 5,
+  QUARTER_TURN: Math.PI / 2, // changing this value has interesting effects
   GRID_INTERACTION_ATTR: "data-grid-interacting",
   INTERACTIVE_SELECTOR: [
     ".card",
