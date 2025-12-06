@@ -177,7 +177,8 @@ function drawSegment(x1, y1, x2, y2) {
 }
 
 export function updateStrokeStyle() {
-  const styles = getComputedStyle(dom.root);
+  const target = document.body || dom.root;
+  const styles = getComputedStyle(target);
   state.lineColor = styles.getPropertyValue("--line").trim() || "#5b4b3a";
   const borderWidth = parseFloat(styles.getPropertyValue("--border-width"));
   dom.ctx.strokeStyle = state.lineColor;
