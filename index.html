@@ -16,8 +16,8 @@
   <nav class="quadrant-nav" aria-label="Quadrant navigation">
     <button type="button" onclick="goToPage(0, 0)">home</button>
     <button type="button" onclick="goToPage(1, 0)">about</button>
-    <button type="button" onclick="goToPage(0, 1)">portfolio</button>
-    <button type="button" onclick="goToPage(1, 1)">blog</button>
+    <button type="button" onclick="goToPage(0, 1)">projects</button>
+    <button type="button" onclick="goToPage(1, 1)">experience</button>
   </nav>
 
   <div id="viewport">
@@ -28,8 +28,8 @@
           <p class="badge" id="page1-title">welcome</p>
           <nav class="card-nav">
             <button type="button" onclick="goToPage(1, 0)">about me</button>
-            <button type="button" onclick="goToPage(0, 1)">portfolio</button>
-            <button type="button" onclick="goToPage(1, 1)">blog</button>
+            <button type="button" onclick="goToPage(0, 1)">projects</button>
+            <button type="button" onclick="goToPage(1, 1)">experience</button>
           </nav>
           <div class="card-actions">
             <a class="chip" href="https://github.com/lluca1" target="_blank" rel="noopener noreferrer">github</a>
@@ -45,33 +45,44 @@
           <p class="badge" id="page2-title">about me</p>
           <div class="bio-body">
             <p class="bio-highlight">Hello, I’m Luca.</p>
-            <p>I’m a 17 year old curiosity-driven backend web developer.</p>
+            <p>I’m a 18 year old curiosity-driven backend web developer.</p>
             <p>I learn best by doing, and I’m always ready to pick up new skills.</p>
           </div>
-          <button class="chip" type="button" onclick="goToPage(0, 0)">back home</button>
+          <button class="chip" type="button" onclick="goToPage(0, 0)">back</button>
         </div>
       </section>
 
       <section id="page3" class="panel" aria-labelledby="page3-title">
         <div class="panel-content">
-          <p class="badge" id="page3-title">portfolio</p>
-          <p>
-            lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          </p>
+          <p class="badge" id="page3-title">projects</p>
+          <div class="portfolio-list">
+            <div class="portfolio-item">
+              <h3><a href="https://github.com/lluca1/studentious" target="_blank" rel="noopener noreferrer">studentious</a></h3>
+              <p>Studentious is a web application built to facilitate collaborative learning through group study sessions. </p>
+            </div>
+            <div class="portfolio-item">
+              <h3><a href="https://github.com/lluca1/openxzbt" target="_blank" rel="noopener noreferrer">openxzbt</a></h3>
+              <p>openxzbt is an open-source platform for creating and exploring interactive 3D expositions.</p>
+            </div>
+          </div>
           <button class="chip" type="button" onclick="goToPage(0, 0)">
-            back home
+            back
           </button>
         </div>
       </section>
 
       <section id="page4" class="panel" aria-labelledby="page4-title">
         <div class="panel-content">
-          <p class="badge" id="page4-title">blog</p>
-          <p>
-            lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          </p>
+          <p class="badge" id="page4-title">experience</p>
+          <div class="portfolio-list">
+            <div class="portfolio-item">
+              <h3>Web Developer - Enovate Services SRL</h3>
+              <p>Sep 2024 - Dec 2025</p>
+              <a href="resources/letter.pdf" target="_blank" rel="noopener noreferrer">letter of recommendation</a>
+            </div>
+          </div>
           <button class="chip" type="button" onclick="goToPage(0, 0)">
-            back home
+            back
           </button>
         </div>
       </section>
