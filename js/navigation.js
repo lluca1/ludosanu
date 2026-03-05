@@ -1,5 +1,5 @@
-const SCROLL_DURATION = 700;
-const COARSE_SCROLL_DURATION = 420;
+const SCROLL_DURATION = 400;
+const COARSE_SCROLL_DURATION = 200;
 let scrollAnimation = null;
 
 function goToPage(x, y) {
