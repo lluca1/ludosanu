@@ -7,11 +7,32 @@ function goToPage(x, y) {
     return;
   }
 
-  const viewportWidth = viewport.clientWidth || window.innerWidth;
-  const viewportHeight = viewport.clientHeight || window.innerHeight;
+  const { width: viewportWidth, height: viewportHeight } = getViewportSize(viewport);
   const targetX = x * viewportWidth;
   const targetY = y * viewportHeight;
   smoothScrollTo(viewport, targetX, targetY, SCROLL_DURATION);
+}
+
+function getViewportSize(viewport) {
+  const styles = getComputedStyle(document.documentElement);
+  const cssWidth = parseFloat(styles.getPropertyValue("--viewport-width"));
+  const cssHeight = parseFloat(styles.getPropertyValue("--viewport-height"));
+  const rect = viewport.getBoundingClientRect();
+
+  const width =
+    (Number.isFinite(cssWidth) && cssWidth > 0 ? cssWidth : 0) ||
+    rect.width ||
+    viewport.clientWidth ||
+    window.innerWidth ||
+    1;
+  const height =
+    (Number.isFinite(cssHeight) && cssHeight > 0 ? cssHeight : 0) ||
+    rect.height ||
+    viewport.clientHeight ||
+    window.innerHeight ||
+    1;
+
+  return { width, height };
 }
 
 function smoothScrollTo(element, targetX, targetY, duration = 600) {
@@ -57,8 +78,10 @@ function smoothScrollTo(element, targetX, targetY, duration = 600) {
     const progress = Math.min(elapsed / duration, 1);
     const eased = ease(progress);
 
-    element.scrollLeft = startX + deltaX * eased;
-    element.scrollTop = startY + deltaY * eased;
+    const nextLeft = startX + deltaX * eased;
+    const nextTop = startY + deltaY * eased;
+    element.scrollLeft = nextLeft;
+    element.scrollTop = nextTop;
 
     if (progress < 1) {
       state.frame = requestAnimationFrame(step);
@@ -66,6 +89,9 @@ function smoothScrollTo(element, targetX, targetY, duration = 600) {
       cleanup();
       element.scrollLeft = targetX;
       element.scrollTop = targetY;
+      if (typeof element.scrollTo === "function") {
+        element.scrollTo({ left: targetX, top: targetY });
+      }
       if (scrollAnimation === state) {
         scrollAnimation = null;
       }
