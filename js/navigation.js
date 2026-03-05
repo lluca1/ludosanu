@@ -7,26 +7,36 @@ function goToPage(x, y) {
     return;
   }
 
-  const { width: viewportWidth, height: viewportHeight } = getViewportSize(viewport);
+  const { width: viewportWidth, height: viewportHeight } = getPageSize(viewport);
   const targetX = x * viewportWidth;
   const targetY = y * viewportHeight;
   smoothScrollTo(viewport, targetX, targetY, SCROLL_DURATION);
 }
 
-function getViewportSize(viewport) {
+function getPageSize(viewport) {
+  const grid = document.getElementById("grid");
   const styles = getComputedStyle(document.documentElement);
   const cssWidth = parseFloat(styles.getPropertyValue("--viewport-width"));
   const cssHeight = parseFloat(styles.getPropertyValue("--viewport-height"));
   const rect = viewport.getBoundingClientRect();
+  const gridRect = grid ? grid.getBoundingClientRect() : null;
+  const gridWidth = gridRect ? gridRect.width / 2 : 0;
+  const gridHeight = gridRect ? gridRect.height / 2 : 0;
+  const scrollWidth = viewport.scrollWidth ? viewport.scrollWidth / 2 : 0;
+  const scrollHeight = viewport.scrollHeight ? viewport.scrollHeight / 2 : 0;
 
   const width =
     (Number.isFinite(cssWidth) && cssWidth > 0 ? cssWidth : 0) ||
+    (Number.isFinite(gridWidth) && gridWidth > 0 ? gridWidth : 0) ||
+    (Number.isFinite(scrollWidth) && scrollWidth > 0 ? scrollWidth : 0) ||
     rect.width ||
     viewport.clientWidth ||
     window.innerWidth ||
     1;
   const height =
     (Number.isFinite(cssHeight) && cssHeight > 0 ? cssHeight : 0) ||
+    (Number.isFinite(gridHeight) && gridHeight > 0 ? gridHeight : 0) ||
+    (Number.isFinite(scrollHeight) && scrollHeight > 0 ? scrollHeight : 0) ||
     rect.height ||
     viewport.clientHeight ||
     window.innerHeight ||
@@ -80,17 +90,22 @@ function smoothScrollTo(element, targetX, targetY, duration = 600) {
 
     const nextLeft = startX + deltaX * eased;
     const nextTop = startY + deltaY * eased;
-    element.scrollLeft = nextLeft;
-    element.scrollTop = nextTop;
+    if (typeof element.scrollTo === "function") {
+      element.scrollTo({ left: nextLeft, top: nextTop });
+    } else {
+      element.scrollLeft = nextLeft;
+      element.scrollTop = nextTop;
+    }
 
     if (progress < 1) {
       state.frame = requestAnimationFrame(step);
     } else {
       cleanup();
-      element.scrollLeft = targetX;
-      element.scrollTop = targetY;
       if (typeof element.scrollTo === "function") {
         element.scrollTo({ left: targetX, top: targetY });
+      } else {
+        element.scrollLeft = targetX;
+        element.scrollTop = targetY;
       }
       if (scrollAnimation === state) {
         scrollAnimation = null;
