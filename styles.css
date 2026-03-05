@@ -3,6 +3,8 @@
   --viewport-width: 100vw;
   --viewport-height: 100vh;
 
+  /* brown palette */
+  /*
   --bg-light: #f5d8b5;
   --card-light: #f9e6cc;
   --line-light: #5b4b3a;
@@ -14,6 +16,20 @@
   --line-dark: #d9c6ac;
   --text-dark: var(--line-dark);
   --grid-dark: rgba(207, 192, 169, 0.1);
+  */
+
+  /* purple + blue palette */
+  --bg-light: #F4F7FC;
+  --card-light: #E6ECF8;
+  --line-light: #3E4A6E;
+  --text-light: var(--line-light);
+  --grid-light: rgba(62, 74, 110, 0.16);
+
+  --bg-dark: #000505;
+  --card-dark: #3B3355;
+  --line-dark: #6F6692;
+  --text-dark: #C9C3E5;
+  --grid-dark: rgba(59, 51, 85, 0.28);
 }
 
 * {
