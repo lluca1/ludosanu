@@ -1,4 +1,5 @@
 const SCROLL_DURATION = 700;
+const COARSE_SCROLL_DURATION = 420;
 let scrollAnimation = null;
 
 function goToPage(x, y) {
@@ -10,7 +11,14 @@ function goToPage(x, y) {
   const { width: viewportWidth, height: viewportHeight } = getPageSize(viewport);
   const targetX = x * viewportWidth;
   const targetY = y * viewportHeight;
-  smoothScrollTo(viewport, targetX, targetY, SCROLL_DURATION);
+  smoothScrollTo(viewport, targetX, targetY, getScrollDuration());
+}
+
+function getScrollDuration() {
+  if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+    return COARSE_SCROLL_DURATION;
+  }
+  return SCROLL_DURATION;
 }
 
 function getPageSize(viewport) {
