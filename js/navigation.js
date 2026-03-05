@@ -24,19 +24,23 @@ function getPageSize(viewport) {
   const gridHeight = gridRect ? gridRect.height / 2 : 0;
   const scrollWidth = viewport.scrollWidth ? viewport.scrollWidth / 2 : 0;
   const scrollHeight = viewport.scrollHeight ? viewport.scrollHeight / 2 : 0;
+  const gridStyleWidth = grid ? parseFloat(getComputedStyle(grid).width) / 2 : 0;
+  const gridStyleHeight = grid ? parseFloat(getComputedStyle(grid).height) / 2 : 0;
 
   const width =
     (Number.isFinite(cssWidth) && cssWidth > 0 ? cssWidth : 0) ||
-    (Number.isFinite(gridWidth) && gridWidth > 0 ? gridWidth : 0) ||
     (Number.isFinite(scrollWidth) && scrollWidth > 0 ? scrollWidth : 0) ||
+    (Number.isFinite(gridWidth) && gridWidth > 0 ? gridWidth : 0) ||
+    (Number.isFinite(gridStyleWidth) && gridStyleWidth > 0 ? gridStyleWidth : 0) ||
     rect.width ||
     viewport.clientWidth ||
     window.innerWidth ||
     1;
   const height =
     (Number.isFinite(cssHeight) && cssHeight > 0 ? cssHeight : 0) ||
-    (Number.isFinite(gridHeight) && gridHeight > 0 ? gridHeight : 0) ||
     (Number.isFinite(scrollHeight) && scrollHeight > 0 ? scrollHeight : 0) ||
+    (Number.isFinite(gridHeight) && gridHeight > 0 ? gridHeight : 0) ||
+    (Number.isFinite(gridStyleHeight) && gridStyleHeight > 0 ? gridStyleHeight : 0) ||
     rect.height ||
     viewport.clientHeight ||
     window.innerHeight ||
@@ -91,7 +95,7 @@ function smoothScrollTo(element, targetX, targetY, duration = 600) {
     const nextLeft = startX + deltaX * eased;
     const nextTop = startY + deltaY * eased;
     if (typeof element.scrollTo === "function") {
-      element.scrollTo({ left: nextLeft, top: nextTop });
+      element.scrollTo(nextLeft, nextTop);
     } else {
       element.scrollLeft = nextLeft;
       element.scrollTop = nextTop;
@@ -102,7 +106,7 @@ function smoothScrollTo(element, targetX, targetY, duration = 600) {
     } else {
       cleanup();
       if (typeof element.scrollTo === "function") {
-        element.scrollTo({ left: targetX, top: targetY });
+        element.scrollTo(targetX, targetY);
       } else {
         element.scrollLeft = targetX;
         element.scrollTop = targetY;
