@@ -10,6 +10,7 @@ window.addEventListener("resize", scheduleCanvasResize);
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", scheduleCanvasResize);
 }
+window.addEventListener("orientationchange", scheduleCanvasResize);
 window.addEventListener("themechange", () => {
   updateStrokeStyle();
   tintExistingLines();
