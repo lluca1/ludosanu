@@ -1,3 +1,3 @@
 # my personal website
 
-*currently a dev portfolio*
+currently a dev portfolio
