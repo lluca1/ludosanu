@@ -140,13 +140,17 @@
         justify-content: flex-end;
         opacity: 0;
         visibility: hidden;
+        /* category transition
         transition: opacity 0.9s ease, visibility 0s linear 0.9s;
+        */
       }
 
       #frame-right .panel.active {
         opacity: 1;
         visibility: visible;
+        /* category transition
         transition: opacity 0.9s ease 0.9s, visibility 0s linear 0.9s;
+        */
       }
 
       #frame-right h3 {
@@ -659,22 +663,23 @@
         return Math.floor(distance / stackHeight);
       }
 
-      const FX_BASE = {
-        radial: params.radialStrength,
-        chaos: params.chaosStrength,
-        deformRadius: params.deformRadius,
-      };
-      const FX_BURST = {
-        radial: params.radialStrength * 1.5,
-        chaos: params.chaosStrength * 5,
-        deformRadius: params.deformRadius * 1.2,
-      };
-      const FX_DURATION = 1.4;
-      let fxStart = -Infinity;
-
-      window.addEventListener("column-fx-burst", () => {
-        fxStart = performance.now() / 1000;
-      });
+      // category transition
+      // const FX_BASE = {
+      //   radial: params.radialStrength,
+      //   chaos: params.chaosStrength,
+      //   deformRadius: params.deformRadius,
+      // };
+      // const FX_BURST = {
+      //   radial: params.radialStrength * 1.5,
+      //   chaos: params.chaosStrength * 5,
+      //   deformRadius: params.deformRadius * 1.2,
+      // };
+      // const FX_DURATION = 1.4;
+      // let fxStart = -Infinity;
+      //
+      // window.addEventListener("column-fx-burst", () => {
+      //   fxStart = performance.now() / 1000;
+      // });
 
       function lerp(a, b, t) {
         return a + (b - a) * t;
@@ -692,15 +697,16 @@
         if (sh) {
           sh.uniforms.uTime.value = timePhase;
 
-          const fxT = (performance.now() / 1000 - fxStart) / FX_DURATION;
-          const env = fxT >= 0 && fxT <= 1 ? Math.sin(Math.PI * fxT) : 0;
-          sh.uniforms.uRadial.value = lerp(FX_BASE.radial, FX_BURST.radial, env);
-          sh.uniforms.uChaos.value = lerp(FX_BASE.chaos, FX_BURST.chaos, env);
-          sh.uniforms.uDeformRadius.value = lerp(
-            FX_BASE.deformRadius,
-            FX_BURST.deformRadius,
-            env,
-          );
+          // category transition
+          // const fxT = (performance.now() / 1000 - fxStart) / FX_DURATION;
+          // const env = fxT >= 0 && fxT <= 1 ? Math.sin(Math.PI * fxT) : 0;
+          // sh.uniforms.uRadial.value = lerp(FX_BASE.radial, FX_BURST.radial, env);
+          // sh.uniforms.uChaos.value = lerp(FX_BASE.chaos, FX_BURST.chaos, env);
+          // sh.uniforms.uDeformRadius.value = lerp(
+          //   FX_BASE.deformRadius,
+          //   FX_BURST.deformRadius,
+          //   env,
+          // );
         }
 
         if (useOrbit) {
@@ -771,7 +777,7 @@
           btn.addEventListener("click", () => {
             if (btn.classList.contains("active")) return;
             show(btn.dataset.category);
-            window.dispatchEvent(new CustomEvent("column-fx-burst"));
+            // category transition - window.dispatchEvent(new CustomEvent("column-fx-burst"));
           });
         });
 
