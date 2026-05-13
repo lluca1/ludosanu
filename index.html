@@ -1,97 +1,624 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ludoșanu Luca</title>
+    <link rel="icon" href="resources/cat.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #080808;
+        --text: rgba(255, 255, 255, 0.95);
+        --muted: rgba(255, 255, 255, 0.82);
+      }
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ludosanu luca</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="icon" href="/resources/cat.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="/dev/styles.css" />
-</head>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+      }
 
-<body>
-  <nav class="quadrant-nav" aria-label="Quadrant navigation">
-    <button type="button" onclick="goToPage(0, 0)">home</button>
-    <button type="button" onclick="goToPage(1, 0)">about</button>
-    <button type="button" onclick="goToPage(0, 1)">projects</button>
-    <button type="button" onclick="goToPage(1, 1)">experience</button>
-  </nav>
+      #frame {
+        position: fixed;
+        inset: 36px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        box-sizing: border-box;
+        overflow: hidden;
+        z-index: 0;
+      }
 
-  <div id="viewport">
-    <canvas id="gridCanvas" role="presentation" aria-hidden="true"></canvas>
-    <div id="grid">
-      <section id="page1" class="panel hero" aria-labelledby="page1-title">
-        <div class="card">
-          <p class="badge" id="page1-title">welcome</p>
-          <nav class="card-nav">
-            <button type="button" onclick="goToPage(1, 0)">about me</button>
-            <button type="button" onclick="goToPage(0, 1)">projects</button>
-            <button type="button" onclick="goToPage(1, 1)">experience</button>
+      #frame canvas {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      #frame-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto 1fr auto;
+        padding: 24px;
+        color: var(--text);
+        font-family: "Roboto Mono", ui-monospace, monospace;
+      }
+
+      #frame-title {
+        grid-column: 1 / 2;
+        font-size: 44px;
+        letter-spacing: 0.02em;
+      }
+
+      #frame-subtitle {
+        grid-column: 1 / 2;
+        margin-top: 6px;
+        font-size: 15px;
+        color: var(--muted);
+      }
+
+      #frame-categories {
+        grid-column: 1 / 2;
+        margin-top: 22px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 22px;
+        font-size: 16px;
+        color: var(--muted);
+        pointer-events: auto;
+      }
+
+      #frame-categories button {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        opacity: 0.65;
+        transition: opacity 0.2s ease;
+        position: relative;
+      }
+
+      #frame-categories button:hover {
+        opacity: 0.9;
+      }
+
+      #frame-categories button.active {
+        opacity: 1;
+        color: var(--text);
+      }
+
+      #frame-right {
+        grid-column: 2 / 3;
+        grid-row: 3 / 4;
+        align-self: end;
+        text-align: right;
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--muted);
+        max-width: 380px;
+      }
+
+      #frame-right .panel {
+        display: none;
+      }
+
+      #frame-right .panel.active {
+        display: block;
+      }
+
+      #frame-right h3 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      #frame-right p {
+        margin: 0 0 12px;
+      }
+
+      #frame-right .meta {
+        font-size: 14px;
+        opacity: 0.7;
+      }
+
+      #frame-right a {
+        color: inherit;
+        opacity: 0.8;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+        pointer-events: auto;
+        transition: opacity 0.2s ease;
+      }
+
+      #frame-right a:hover {
+        opacity: 1;
+      }
+
+      @media (max-width: 640px) {
+        #frame {
+          inset: 12px;
+        }
+
+        #frame-overlay {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr auto;
+          padding: 16px;
+        }
+
+        #frame-title {
+          font-size: 30px;
+        }
+
+        #frame-categories {
+          gap: 16px;
+          font-size: 14px;
+        }
+
+        #frame-right {
+          grid-column: 1 / 2;
+          grid-row: 2 / 3;
+          align-self: start;
+          text-align: left;
+          max-width: none;
+          margin-top: 24px;
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="frame">
+      <div id="frame-overlay">
+        <div>
+          <div id="frame-title">Ludoșanu Luca</div>
+          <div id="frame-subtitle">developer</div>
+          <nav id="frame-categories" aria-label="Sections">
+            <button type="button" data-category="about" class="active">about</button>
+            <button type="button" data-category="projects">projects</button>
+            <button type="button" data-category="experience">experience</button>
           </nav>
-          <div class="card-actions">
-            <a class="chip" href="https://github.com/lluca1" target="_blank" rel="noopener noreferrer">github</a>
-            <button class="chip theme-toggle" aria-label="Toggle theme" data-theme-toggle>
-              toggle
-            </button>
-          </div>
         </div>
-      </section>
-
-      <section id="page2" class="panel" aria-labelledby="page2-title">
-        <div class="panel-content bio-panel">
-          <p class="badge" id="page2-title">about me</p>
-          <div class="bio-body">
-            <p class="bio-highlight">Hello, I'm Luca.</p>
-            <p>I'm an 18 year old curiosity-driven developer.</p>
+        <div id="frame-right">
+          <div class="panel active" data-content="about">
+            <p>Hello, I'm Luca.</p>
+            <p>I'm an 18 year old curiosity-driven developer based in Romania.</p>
             <p>I learn best by doing, and I'm always ready to pick up new skills.</p>
+            <p><a href="https://github.com/lluca1" target="_blank" rel="noopener noreferrer">github</a></p>
           </div>
-          <button class="chip" type="button" onclick="goToPage(0, 0)">back</button>
-        </div>
-      </section>
-
-      <section id="page3" class="panel" aria-labelledby="page3-title">
-        <div class="panel-content">
-          <p class="badge" id="page3-title">projects</p>
-          <div class="portfolio-list">
-            <div class="portfolio-item">
-              <h3><a href="https://github.com/lluca1/studentious" target="_blank" rel="noopener noreferrer">studentious</a></h3>
-              <p>Studentious is a web application built to facilitate collaborative learning through group study sessions. </p>
-            </div>
-            <div class="portfolio-item">
-              <h3><a href="https://github.com/lluca1/openxzbt" target="_blank" rel="noopener noreferrer">openxzbt</a></h3>
-              <p>openxzbt is an open-source platform for creating and exploring interactive 3D expositions.</p>
-            </div>
+          <div class="panel" data-content="projects">
+            <h3><a href="https://github.com/lluca1/studentious" target="_blank" rel="noopener noreferrer">studentious</a></h3>
+            <p>A web app for collaborative learning through group study sessions.</p>
+            <h3><a href="https://github.com/lluca1/openxzbt" target="_blank" rel="noopener noreferrer">openxzbt</a></h3>
+            <p>An open-source platform for creating and exploring interactive 3D expositions.</p>
           </div>
-          <button class="chip" type="button" onclick="goToPage(0, 0)">
-            back
-          </button>
-        </div>
-      </section>
-
-      <section id="page4" class="panel" aria-labelledby="page4-title">
-        <div class="panel-content">
-          <p class="badge" id="page4-title">experience</p>
-          <div class="portfolio-list">
-            <div class="portfolio-item">
-              <h3>Web Developer - Enovate Services SRL</h3>
-              <p>Sep 2024 - Dec 2025</p>
-              <a href="/resources/letter.pdf" target="_blank" rel="noopener noreferrer">letter of recommendation</a>
-            </div>
+          <div class="panel" data-content="experience">
+            <h3>Web Developer</h3>
+            <p>Enovate Services SRL</p>
+            <p class="meta">Sep 2024 — Dec 2025</p>
+            <p><a href="resources/letter.pdf" target="_blank" rel="noopener noreferrer">letter of recommendation</a></p>
           </div>
-          <button class="chip" type="button" onclick="goToPage(0, 0)">
-            back
-          </button>
         </div>
-      </section>
+      </div>
     </div>
-  </div>
 
-  <script src="/dev/js/navigation.js" defer></script>
-  <script src="/dev/js/theme.js" defer></script>
-  <script type="module" src="/dev/js/grid/main.js"></script>
-</body>
+    <script type="module">
+      import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+      import { settings } from "./settings.js";
 
+      const params = { ...settings };
+
+      const isTouchDevice =
+        window.matchMedia("(pointer: coarse)").matches ||
+        "ontouchstart" in window;
+      const isSmallViewport = Math.min(window.innerWidth, window.innerHeight) <= 900;
+      const mobileOptimizedMode = isTouchDevice || isSmallViewport;
+
+      const quality = Math.min(
+        1,
+        Math.max(
+          0.2,
+          (Number.isFinite(params.quality) ? params.quality : 1) *
+            (mobileOptimizedMode ? 0.78 : 1),
+        ),
+      );
+
+      const scene = new THREE.Scene();
+
+      const cameraTarget = new THREE.Vector3(
+        params.targetX,
+        params.targetY,
+        params.targetZ,
+      );
+
+      const camera = new THREE.PerspectiveCamera(
+        params.fov,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        500,
+      );
+      camera.position.set(params.cameraX, params.cameraY, params.cameraZ);
+
+      const mobileLayoutQuery = window.matchMedia("(max-width: 640px)");
+      const MOBILE_TARGET_Y_OFFSET = 2.5;
+      function applyViewportTarget() {
+        cameraTarget.y = mobileLayoutQuery.matches
+          ? params.targetY + MOBILE_TARGET_Y_OFFSET
+          : params.targetY;
+        camera.lookAt(cameraTarget);
+      }
+      mobileLayoutQuery.addEventListener("change", applyViewportTarget);
+
+      const maxPixelRatio = mobileOptimizedMode ? 1 : 1.5;
+      const renderer = new THREE.WebGLRenderer({
+        antialias: false,
+        powerPreference: "low-power",
+      });
+      const frame = document.getElementById("frame");
+      const frameRect = frame.getBoundingClientRect();
+      renderer.setSize(frameRect.width, frameRect.height);
+      applyViewportTarget();
+
+      function updateRendererQuality() {
+        const qualityScale = 0.6 + quality * 0.4;
+        renderer.setPixelRatio(
+          Math.min(window.devicePixelRatio, maxPixelRatio * qualityScale),
+        );
+      }
+
+      updateRendererQuality();
+      renderer.setClearColor(0x080808, 1);
+      renderer.domElement.style.position = "absolute";
+      renderer.domElement.style.inset = "0";
+      renderer.domElement.style.width = "100%";
+      renderer.domElement.style.height = "100%";
+      renderer.domElement.style.display = "block";
+      frame.appendChild(renderer.domElement);
+
+      const deformPos = new THREE.Vector3(
+        params.deformX,
+        params.deformY,
+        params.deformZ,
+      );
+
+      const marker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0xb8b8b8 }),
+      );
+      marker.position.copy(deformPos);
+      scene.add(marker);
+
+      const chunkHeight = params.wavePeriod * params.cyclesPerChunk;
+      const numChunks = Math.max(2, Math.floor(params.numChunks * quality));
+      const stackHeight = numChunks * chunkHeight;
+      const halfStack = stackHeight * 0.5;
+
+      function mulberry32(seed) {
+        let a = seed >>> 0;
+        return function () {
+          a |= 0;
+          a = (a + 0x6d2b79f5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      const pointsPerChunk = Math.max(
+        1,
+        Math.floor(params.pointsPerChunk * quality),
+      );
+
+      function makeChunkGeometry(seed) {
+        const rnd = mulberry32(seed);
+        const positions = new Float32Array(pointsPerChunk * 3);
+
+        for (let i = 0; i < pointsPerChunk; i++) {
+          const x = rnd() - 0.5;
+          const y = rnd() * chunkHeight - chunkHeight * 0.5;
+          const z = rnd() - 0.5;
+
+          const j = i * 3;
+          positions[j + 0] = x;
+          positions[j + 1] = y;
+          positions[j + 2] = z;
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        geo.userData.positions = positions;
+        geo.computeBoundingSphere();
+        return geo;
+      }
+
+      function regenerateChunkGeometry(geo, seed) {
+        const rnd = mulberry32(seed);
+        const positions = geo.userData.positions;
+        const count = positions.length / 3;
+
+        for (let i = 0; i < count; i++) {
+          const x = rnd() - 0.5;
+          const y = rnd() * chunkHeight - chunkHeight * 0.5;
+          const z = rnd() - 0.5;
+
+          const j = i * 3;
+          positions[j + 0] = x;
+          positions[j + 1] = y;
+          positions[j + 2] = z;
+        }
+
+        geo.attributes.position.needsUpdate = true;
+        geo.computeBoundingSphere();
+      }
+
+      const material = new THREE.PointsMaterial({
+        size: params.pointSize,
+        sizeAttenuation: true,
+        color: 0xb8b8b8,
+      });
+
+      material.onBeforeCompile = (shader) => {
+        shader.uniforms.uBase = { value: params.base };
+        shader.uniforms.uAmp = { value: params.amplitude };
+        shader.uniforms.uPeriod = { value: params.wavePeriod };
+        shader.uniforms.uChunkH = { value: chunkHeight };
+
+        shader.uniforms.uTime = { value: 0.0 };
+        shader.uniforms.uDeformPos = { value: deformPos.clone() };
+        shader.uniforms.uDeformRadius = { value: params.deformRadius };
+        shader.uniforms.uSwirl = { value: params.swirlStrength };
+        shader.uniforms.uRadial = { value: params.radialStrength };
+        shader.uniforms.uChaos = { value: params.chaosStrength };
+        shader.uniforms.uChaosFreq = { value: params.chaosFreq };
+
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            `
+            #include <common>
+
+            uniform float uBase;
+            uniform float uAmp;
+            uniform float uPeriod;
+            uniform float uChunkH;
+
+            uniform float uTime;
+            uniform vec3  uDeformPos;
+            uniform float uDeformRadius;
+            uniform float uSwirl;
+            uniform float uRadial;
+            uniform float uChaos;
+            uniform float uChaosFreq;
+
+            float triangleWave(float y, float period) {
+              float t = y / period;
+              return 2.0 * abs(2.0 * (t - floor(t + 0.5))) - 1.0;
+            }
+
+            float squareSize(float y) {
+              return uBase * (1.0 + uAmp * triangleWave(y, uPeriod));
+            }
+
+            vec3 hashNoise3(vec3 p) {
+              return vec3(
+                sin(dot(p, vec3(127.1, 311.7, 74.7))),
+                sin(dot(p, vec3(269.5, 183.3, 246.1))),
+                sin(dot(p, vec3(113.5, 271.9, 124.6)))
+              );
+            }
+            `,
+          )
+          .replace(
+            "#include <begin_vertex>",
+            `
+            vec3 p = position;
+
+            float yForWave = p.y + 0.5 * uChunkH;
+            float s = squareSize(yForWave);
+
+            vec3 transformed = vec3(p.x * s, p.y, p.z * s);
+            `,
+          )
+          .replace(
+            "#include <project_vertex>",
+            `
+            vec4 worldPos = modelMatrix * vec4(transformed, 1.0);
+
+            vec3 d = worldPos.xyz - uDeformPos;
+            float dist = length(d);
+            float r = max(uDeformRadius, 1e-4);
+            float falloff = exp(-(dist * dist) / (2.0 * r * r));
+
+            vec2 rel = worldPos.xz - uDeformPos.xz;
+
+            float inv = 1.0 / (dist + 0.2);
+            float wobble = 1.0 + 0.35 * sin(uTime * 2.0 + dist * 6.0);
+            float angle = uSwirl * falloff * inv * wobble;
+
+            float c = cos(angle);
+            float sA = sin(angle);
+            rel = mat2(c, -sA, sA, c) * rel;
+            worldPos.xz = uDeformPos.xz + rel;
+
+            vec3 dir = d / (dist + 1e-4);
+            float pulse = 0.6 + 0.4 * sin(uTime * 3.0 - dist * 7.0);
+            worldPos.xyz += dir * (uRadial * falloff * pulse);
+
+            vec3 timeVec = vec3(cos(uTime), sin(uTime), cos(uTime * 2.0));
+            vec3 n = hashNoise3(worldPos.xyz * uChaosFreq + timeVec);
+            vec3 swirlBias = vec3(-dir.z, 0.15, dir.x);
+            worldPos.xyz += (0.7 * n + 0.3 * swirlBias) * (uChaos * falloff);
+
+            vec4 mvPosition = viewMatrix * worldPos;
+            gl_Position = projectionMatrix * mvPosition;
+            `,
+          );
+
+        material.userData.shader = shader;
+      };
+
+      const group = new THREE.Group();
+      scene.add(group);
+      group.rotation.x = THREE.MathUtils.degToRad(params.tiltX);
+      group.rotation.z = THREE.MathUtils.degToRad(params.tiltZ);
+
+      const chunks = [];
+      let seedCounter = 1;
+
+      for (let i = 0; i < numChunks; i++) {
+        const seed = seedCounter++;
+        const geo = makeChunkGeometry(seed);
+        const pts = new THREE.Points(geo, material);
+        const baseY = (i - (numChunks - 1) / 2) * chunkHeight;
+        pts.position.y = baseY;
+        pts.frustumCulled = false;
+        pts.userData.baseY = baseY;
+        pts.userData.seedOffset = i;
+        pts.userData.seed = seed;
+        group.add(pts);
+        chunks.push(pts);
+      }
+
+      const loopDuration = Math.max(1, Number(params.loopDuration || 60));
+      const timeScale = (Math.PI * 2) / loopDuration;
+      const scrollSpeed = params.scrollSpeed;
+
+      const useOrbit = params.orbitEnabled >= 0.5;
+      const orbitYawBase = THREE.MathUtils.degToRad(params.orbitYaw);
+      const orbitPitch = THREE.MathUtils.degToRad(params.orbitPitch);
+      const orbitRadius = Math.max(0.1, params.orbitRadius);
+      const orbitCosPitch = Math.cos(orbitPitch);
+      const orbitSinPitch = Math.sin(orbitPitch);
+      const orbitSpeed = params.orbitSpeed;
+
+      let isVisible = !document.hidden;
+      let inView = true;
+      let pausedAt = 0;
+      let totalPaused = 0;
+
+      function onPauseStateChange() {
+        const shouldRun = isVisible && inView;
+        if (!shouldRun && !pausedAt) {
+          pausedAt = performance.now() / 1000;
+        } else if (shouldRun && pausedAt) {
+          totalPaused += performance.now() / 1000 - pausedAt;
+          pausedAt = 0;
+        }
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        isVisible = !document.hidden;
+        onPauseStateChange();
+      });
+
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          onPauseStateChange();
+        },
+        { threshold: 0 },
+      );
+      io.observe(frame);
+
+      const startTime = performance.now() / 1000;
+
+      function wrap(value, range) {
+        return ((value % range) + range) % range;
+      }
+
+      function getElapsed() {
+        return performance.now() / 1000 - startTime - totalPaused;
+      }
+
+      function getChunkWraps(baseY, scrollOffset) {
+        const distance = scrollOffset + (halfStack - baseY);
+        if (distance <= 0) return 0;
+        return Math.floor(distance / stackHeight);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        if (!isVisible || !inView) return;
+
+        const elapsed = getElapsed();
+        const timePhase = wrap(elapsed, loopDuration) * timeScale;
+
+        const sh = material.userData.shader;
+        if (sh) {
+          sh.uniforms.uTime.value = timePhase;
+        }
+
+        if (useOrbit) {
+          const yaw = orbitYawBase + elapsed * orbitSpeed;
+          camera.position.set(
+            cameraTarget.x + Math.cos(yaw) * orbitCosPitch * orbitRadius,
+            cameraTarget.y + orbitSinPitch * orbitRadius,
+            cameraTarget.z + Math.sin(yaw) * orbitCosPitch * orbitRadius,
+          );
+          camera.lookAt(cameraTarget);
+        }
+
+        const scrollOffset = wrap(scrollSpeed * elapsed, stackHeight);
+
+        for (const chunk of chunks) {
+          const baseY = chunk.userData.baseY;
+          const wraps = getChunkWraps(baseY, scrollOffset);
+          const seed = 1 + chunk.userData.seedOffset + wraps;
+
+          if (seed !== chunk.userData.seed) {
+            regenerateChunkGeometry(chunk.geometry, seed);
+            chunk.userData.seed = seed;
+          }
+
+          const unwrappedY = baseY - scrollOffset;
+          chunk.position.y =
+            wrap(unwrappedY + halfStack, stackHeight) - halfStack;
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      window.addEventListener("resize", () => {
+        const rect = frame.getBoundingClientRect();
+        camera.aspect = rect.width / rect.height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(rect.width, rect.height);
+        updateRendererQuality();
+        applyViewportTarget();
+      });
+
+      animate();
+    </script>
+
+    <script>
+      (function () {
+        const buttons = document.querySelectorAll("#frame-categories button");
+        const panels = document.querySelectorAll("#frame-right .panel");
+
+        function show(name) {
+          buttons.forEach((b) => b.classList.toggle("active", b.dataset.category === name));
+          panels.forEach((p) => p.classList.toggle("active", p.dataset.content === name));
+        }
+
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => show(btn.dataset.category));
+        });
+      })();
+    </script>
+  </body>
 </html>
