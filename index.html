@@ -8,11 +8,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script>
+      (function () {
+        var t = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
     <style>
       :root {
         --bg: #080808;
         --text: rgba(255, 255, 255, 0.95);
         --muted: rgba(255, 255, 255, 0.82);
+        --border: rgba(255, 255, 255, 0.35);
+      }
+
+      [data-theme="light"] {
+        --bg: #f4f4f4;
+        --text: rgba(0, 0, 0, 0.95);
+        --muted: rgba(0, 0, 0, 0.72);
+        --border: rgba(0, 0, 0, 0.25);
       }
 
       html,
@@ -22,15 +36,17 @@
         height: 100%;
         overflow: hidden;
         background: var(--bg);
+        transition: background-color 0.6s ease;
       }
 
       #frame {
         position: fixed;
         inset: 36px;
-        border: 1px solid rgba(255, 255, 255, 0.35);
+        border: 1px solid var(--border);
         box-sizing: border-box;
         overflow: hidden;
         z-index: 0;
+        transition: border-color 0.6s ease;
       }
 
       #frame canvas {
@@ -52,6 +68,7 @@
         padding: 24px;
         color: var(--text);
         font-family: "Roboto Mono", ui-monospace, monospace;
+        transition: color 0.6s ease;
       }
 
       #frame-title {
@@ -65,6 +82,7 @@
         margin-top: 6px;
         font-size: 15px;
         color: var(--muted);
+        transition: color 0.6s ease;
       }
 
       #frame-categories {
@@ -76,6 +94,7 @@
         font-size: 16px;
         color: var(--muted);
         pointer-events: auto;
+        transition: color 0.6s ease;
       }
 
       #frame-categories button {
@@ -87,7 +106,7 @@
         color: inherit;
         cursor: pointer;
         opacity: 0.65;
-        transition: opacity 0.2s ease;
+        transition: opacity 0.2s ease, color 0.6s ease;
         position: relative;
       }
 
@@ -109,14 +128,25 @@
         line-height: 1.55;
         color: var(--muted);
         max-width: 380px;
+        display: grid;
+        transition: color 0.6s ease;
       }
 
       #frame-right .panel {
-        display: none;
+        grid-column: 1;
+        grid-row: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.9s ease, visibility 0s linear 0.9s;
       }
 
       #frame-right .panel.active {
-        display: block;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.9s ease 0.9s, visibility 0s linear 0.9s;
       }
 
       #frame-right h3 {
@@ -124,6 +154,7 @@
         font-size: 18px;
         font-weight: 500;
         color: var(--text);
+        transition: color 0.6s ease;
       }
 
       #frame-right p {
@@ -149,9 +180,44 @@
         opacity: 1;
       }
 
+      #theme-toggle {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 14px;
+        font-family: "Roboto Mono", ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        z-index: 3;
+        transition: color 0.6s ease;
+      }
+
+      #theme-toggle button {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        opacity: 0.55;
+        transition: opacity 0.2s ease, color 0.6s ease;
+      }
+
+      #theme-toggle button:hover {
+        opacity: 0.85;
+      }
+
+      #theme-toggle button.active {
+        opacity: 1;
+        color: var(--text);
+      }
+
       @media (max-width: 640px) {
         #frame {
-          inset: 12px;
+          inset: 12px 12px 32px 12px;
         }
 
         #frame-overlay {
@@ -177,6 +243,10 @@
           max-width: none;
           margin-top: 24px;
           font-size: 16px;
+        }
+
+        #frame-right .panel {
+          justify-content: flex-start;
         }
       }
     </style>
@@ -214,6 +284,11 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <div id="theme-toggle" aria-label="Theme">
+      <button type="button" data-theme="dark">dark</button>
+      <button type="button" data-theme="light">light</button>
     </div>
 
     <script type="module">
@@ -369,6 +444,40 @@
         size: params.pointSize,
         sizeAttenuation: true,
         color: 0xb8b8b8,
+      });
+
+      const THEME_COLORS = {
+        dark: { bg: 0x080808, particle: 0xb8b8b8 },
+        light: { bg: 0xf4f4f4, particle: 0x404040 },
+      };
+      const THEME_DURATION = 0.6;
+      const initialTheme =
+        document.documentElement.dataset.theme === "light" ? "light" : "dark";
+      const themeFromBg = new THREE.Color(THEME_COLORS[initialTheme].bg);
+      const themeToBg = new THREE.Color(THEME_COLORS[initialTheme].bg);
+      const themeFromParticle = new THREE.Color(
+        THEME_COLORS[initialTheme].particle,
+      );
+      const themeToParticle = new THREE.Color(
+        THEME_COLORS[initialTheme].particle,
+      );
+      const themeCurrentBg = new THREE.Color(THEME_COLORS[initialTheme].bg);
+      const themeCurrentParticle = new THREE.Color(
+        THEME_COLORS[initialTheme].particle,
+      );
+      let themeStartTime = -Infinity;
+
+      renderer.setClearColor(themeCurrentBg, 1);
+      material.color.copy(themeCurrentParticle);
+      marker.material.color.copy(themeCurrentParticle);
+
+      window.addEventListener("theme-change", (e) => {
+        const target = THEME_COLORS[e.detail] || THEME_COLORS.dark;
+        themeFromBg.copy(themeCurrentBg);
+        themeFromParticle.copy(themeCurrentParticle);
+        themeToBg.setHex(target.bg);
+        themeToParticle.setHex(target.particle);
+        themeStartTime = performance.now() / 1000;
       });
 
       material.onBeforeCompile = (shader) => {
@@ -550,6 +659,27 @@
         return Math.floor(distance / stackHeight);
       }
 
+      const FX_BASE = {
+        radial: params.radialStrength,
+        chaos: params.chaosStrength,
+        deformRadius: params.deformRadius,
+      };
+      const FX_BURST = {
+        radial: params.radialStrength * 1.5,
+        chaos: params.chaosStrength * 5,
+        deformRadius: params.deformRadius * 1.2,
+      };
+      const FX_DURATION = 1.4;
+      let fxStart = -Infinity;
+
+      window.addEventListener("column-fx-burst", () => {
+        fxStart = performance.now() / 1000;
+      });
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
       function animate() {
         requestAnimationFrame(animate);
 
@@ -561,6 +691,16 @@
         const sh = material.userData.shader;
         if (sh) {
           sh.uniforms.uTime.value = timePhase;
+
+          const fxT = (performance.now() / 1000 - fxStart) / FX_DURATION;
+          const env = fxT >= 0 && fxT <= 1 ? Math.sin(Math.PI * fxT) : 0;
+          sh.uniforms.uRadial.value = lerp(FX_BASE.radial, FX_BURST.radial, env);
+          sh.uniforms.uChaos.value = lerp(FX_BASE.chaos, FX_BURST.chaos, env);
+          sh.uniforms.uDeformRadius.value = lerp(
+            FX_BASE.deformRadius,
+            FX_BURST.deformRadius,
+            env,
+          );
         }
 
         if (useOrbit) {
@@ -590,6 +730,18 @@
             wrap(unwrappedY + halfStack, stackHeight) - halfStack;
         }
 
+        const themeRaw =
+          (performance.now() / 1000 - themeStartTime) / THEME_DURATION;
+        const themeT = Math.min(1, Math.max(0, themeRaw));
+        const themeEased = 1 - Math.pow(1 - themeT, 3);
+        themeCurrentBg.copy(themeFromBg).lerp(themeToBg, themeEased);
+        themeCurrentParticle
+          .copy(themeFromParticle)
+          .lerp(themeToParticle, themeEased);
+        renderer.setClearColor(themeCurrentBg, 1);
+        material.color.copy(themeCurrentParticle);
+        marker.material.color.copy(themeCurrentParticle);
+
         renderer.render(scene, camera);
       }
 
@@ -616,7 +768,32 @@
         }
 
         buttons.forEach((btn) => {
-          btn.addEventListener("click", () => show(btn.dataset.category));
+          btn.addEventListener("click", () => {
+            if (btn.classList.contains("active")) return;
+            show(btn.dataset.category);
+            window.dispatchEvent(new CustomEvent("column-fx-burst"));
+          });
+        });
+
+        const themeButtons = document.querySelectorAll("#theme-toggle button");
+        function setActiveTheme(name) {
+          themeButtons.forEach((b) =>
+            b.classList.toggle("active", b.dataset.theme === name),
+          );
+        }
+        setActiveTheme(document.documentElement.dataset.theme || "dark");
+
+        themeButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            if (btn.classList.contains("active")) return;
+            const name = btn.dataset.theme;
+            setActiveTheme(name);
+            document.documentElement.setAttribute("data-theme", name);
+            localStorage.setItem("theme", name);
+            window.dispatchEvent(
+              new CustomEvent("theme-change", { detail: name }),
+            );
+          });
         });
       })();
     </script>
