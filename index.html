@@ -303,7 +303,7 @@
       scene.add(marker);
 
       const chunkHeight = params.wavePeriod * params.cyclesPerChunk;
-      const numChunks = Math.max(2, Math.floor(params.numChunks * quality));
+      const numChunks = Math.max(2, params.numChunks);
       const stackHeight = numChunks * chunkHeight;
       const halfStack = stackHeight * 0.5;
 
