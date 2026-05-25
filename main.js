@@ -44,10 +44,10 @@ function applyViewportTarget() {
 }
 mobileLayoutQuery.addEventListener("change", applyViewportTarget);
 
-const maxPixelRatio = mobileOptimizedMode ? 1 : 1.5;
+const maxPixelRatio = mobileOptimizedMode ? 1.5 : 2;
 const renderer = new THREE.WebGLRenderer({
   antialias: false,
-  powerPreference: "low-power",
+  powerPreference: "high-performance",
 });
 const frame = document.getElementById("frame");
 const frameRect = frame.getBoundingClientRect();
@@ -55,9 +55,8 @@ renderer.setSize(frameRect.width, frameRect.height);
 applyViewportTarget();
 
 function updateRendererQuality() {
-  const qualityScale = 0.6 + quality * 0.4;
   renderer.setPixelRatio(
-    Math.min(window.devicePixelRatio, maxPixelRatio * qualityScale),
+    Math.min(window.devicePixelRatio, maxPixelRatio),
   );
 }
 
@@ -283,6 +282,20 @@ material.onBeforeCompile = (shader) => {
       `,
     );
 
+  shader.vertexShader = shader.vertexShader.replace(
+    "#include <logdepthbuf_vertex>",
+    `gl_PointSize = max(gl_PointSize, 1.5);
+    #include <logdepthbuf_vertex>`,
+  );
+
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <color_fragment>",
+    `#include <color_fragment>
+      float d = length(gl_PointCoord - vec2(0.5));
+      if (d > 0.5) discard;
+    `,
+  );
+
   material.userData.shader = shader;
 };
 
@@ -447,6 +460,7 @@ function animate() {
     .copy(themeFromParticle)
     .lerp(themeToParticle, themeEased);
   renderer.setClearColor(themeCurrentBg, 1);
+  document.body.style.backgroundColor = "#" + themeCurrentBg.getHexString();
   material.color.copy(themeCurrentParticle);
   marker.material.color.copy(themeCurrentParticle);
 
