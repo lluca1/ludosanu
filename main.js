@@ -3,6 +3,9 @@ import { settings } from "./settings.js";
 
 const params = { ...settings };
 
+const GLOW_OPACITY = 0.46;
+const INK_OPACITY = 0.9;
+
 const isTouchDevice =
   window.matchMedia("(pointer: coarse)").matches ||
   "ontouchstart" in window;
@@ -145,16 +148,31 @@ function regenerateChunkGeometry(geo, seed) {
   geo.computeBoundingSphere();
 }
 
-const material = new THREE.PointsMaterial({
-  size: params.pointSize,
+const glowMaterial = new THREE.PointsMaterial({
+  size: params.pointSize * 1.65,
   sizeAttenuation: true,
   color: 0xb8b8b8,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  opacity: GLOW_OPACITY,
+});
+
+const inkMaterial = new THREE.PointsMaterial({
+  size: params.pointSize * 1.65,
+  sizeAttenuation: true,
+  color: 0x404040,
+  transparent: true,
+  depthWrite: false,
+  opacity: 0,
 });
 
 const THEME_COLORS = {
-  dark: { bg: 0x080808, particle: 0xb8b8b8 },
-  light: { bg: 0xf4f4f4, particle: 0x404040 },
+  dark: { bg: 0x080808, particle: 0xb8b8b8, mix: 0 },
+  light: { bg: 0xf4f4f4, particle: 0x404040, mix: 1 },
 };
+const GLOW_ACCENT = 0xffc296;
+const INK_ACCENT = 0x36457f;
 const THEME_DURATION = 0.6;
 const initialTheme =
   document.documentElement.dataset.theme === "light" ? "light" : "dark";
@@ -170,134 +188,173 @@ const themeCurrentBg = new THREE.Color(THEME_COLORS[initialTheme].bg);
 const themeCurrentParticle = new THREE.Color(
   THEME_COLORS[initialTheme].particle,
 );
+let themeMixFrom = THEME_COLORS[initialTheme].mix;
+let themeMixTo = THEME_COLORS[initialTheme].mix;
+let themeMixCurrent = THEME_COLORS[initialTheme].mix;
 let themeStartTime = -Infinity;
 
 renderer.setClearColor(themeCurrentBg, 1);
-material.color.copy(themeCurrentParticle);
 marker.material.color.copy(themeCurrentParticle);
 
 window.addEventListener("theme-change", (e) => {
   const target = THEME_COLORS[e.detail] || THEME_COLORS.dark;
   themeFromBg.copy(themeCurrentBg);
   themeFromParticle.copy(themeCurrentParticle);
+  themeMixFrom = themeMixCurrent;
   themeToBg.setHex(target.bg);
   themeToParticle.setHex(target.particle);
+  themeMixTo = target.mix;
   themeStartTime = performance.now() / 1000;
 });
 
-material.onBeforeCompile = (shader) => {
-  shader.uniforms.uBase = { value: params.base };
-  shader.uniforms.uAmp = { value: params.amplitude };
-  shader.uniforms.uPeriod = { value: params.wavePeriod };
-  shader.uniforms.uChunkH = { value: chunkHeight };
+function applyColumnShader(material, accentHex) {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uBase = { value: params.base };
+    shader.uniforms.uAmp = { value: params.amplitude };
+    shader.uniforms.uPeriod = { value: params.wavePeriod };
+    shader.uniforms.uChunkH = { value: chunkHeight };
 
-  shader.uniforms.uTime = { value: 0.0 };
-  shader.uniforms.uDeformPos = { value: deformPos.clone() };
-  shader.uniforms.uDeformRadius = { value: params.deformRadius };
-  shader.uniforms.uSwirl = { value: params.swirlStrength };
-  shader.uniforms.uRadial = { value: params.radialStrength };
-  shader.uniforms.uChaos = { value: params.chaosStrength };
-  shader.uniforms.uChaosFreq = { value: params.chaosFreq };
+    shader.uniforms.uTime = { value: 0.0 };
+    shader.uniforms.uDeformPos = { value: deformPos.clone() };
+    shader.uniforms.uDeformRadius = { value: params.deformRadius };
+    shader.uniforms.uSwirl = { value: params.swirlStrength };
+    shader.uniforms.uRadial = { value: params.radialStrength };
+    shader.uniforms.uChaos = { value: params.chaosStrength };
+    shader.uniforms.uChaosFreq = { value: params.chaosFreq };
+    shader.uniforms.uAccent = { value: new THREE.Color(accentHex) };
 
-  shader.vertexShader = shader.vertexShader
-    .replace(
-      "#include <common>",
-      `
-      #include <common>
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        `
+        #include <common>
 
-      uniform float uBase;
-      uniform float uAmp;
-      uniform float uPeriod;
-      uniform float uChunkH;
+        uniform float uBase;
+        uniform float uAmp;
+        uniform float uPeriod;
+        uniform float uChunkH;
 
-      uniform float uTime;
-      uniform vec3  uDeformPos;
-      uniform float uDeformRadius;
-      uniform float uSwirl;
-      uniform float uRadial;
-      uniform float uChaos;
-      uniform float uChaosFreq;
+        uniform float uTime;
+        uniform vec3  uDeformPos;
+        uniform float uDeformRadius;
+        uniform float uSwirl;
+        uniform float uRadial;
+        uniform float uChaos;
+        uniform float uChaosFreq;
 
-      float triangleWave(float y, float period) {
-        float t = y / period;
-        return 2.0 * abs(2.0 * (t - floor(t + 0.5))) - 1.0;
-      }
+        varying float vRand;
+        varying float vDepth;
+        varying float vGlow;
 
-      float squareSize(float y) {
-        return uBase * (1.0 + uAmp * triangleWave(y, uPeriod));
-      }
+        float triangleWave(float y, float period) {
+          float t = y / period;
+          return 2.0 * abs(2.0 * (t - floor(t + 0.5))) - 1.0;
+        }
 
-      vec3 hashNoise3(vec3 p) {
-        return vec3(
-          sin(dot(p, vec3(127.1, 311.7, 74.7))),
-          sin(dot(p, vec3(269.5, 183.3, 246.1))),
-          sin(dot(p, vec3(113.5, 271.9, 124.6)))
-        );
-      }
-      `,
-    )
-    .replace(
-      "#include <begin_vertex>",
-      `
-      vec3 p = position;
+        float squareSize(float y) {
+          return uBase * (1.0 + uAmp * triangleWave(y, uPeriod));
+        }
 
-      float yForWave = p.y + 0.5 * uChunkH;
-      float s = squareSize(yForWave);
+        vec3 hashNoise3(vec3 p) {
+          return vec3(
+            sin(dot(p, vec3(127.1, 311.7, 74.7))),
+            sin(dot(p, vec3(269.5, 183.3, 246.1))),
+            sin(dot(p, vec3(113.5, 271.9, 124.6)))
+          );
+        }
+        `,
+      )
+      .replace(
+        "#include <begin_vertex>",
+        `
+        vec3 p = position;
 
-      vec3 transformed = vec3(p.x * s, p.y, p.z * s);
-      `,
-    )
-    .replace(
-      "#include <project_vertex>",
-      `
-      vec4 worldPos = modelMatrix * vec4(transformed, 1.0);
+        vRand = fract(sin(dot(position, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
 
-      vec3 d = worldPos.xyz - uDeformPos;
-      float dist = length(d);
-      float r = max(uDeformRadius, 1e-4);
-      float falloff = exp(-(dist * dist) / (2.0 * r * r));
+        float yForWave = p.y + 0.5 * uChunkH;
+        float s = squareSize(yForWave);
 
-      vec2 rel = worldPos.xz - uDeformPos.xz;
+        vec3 transformed = vec3(p.x * s, p.y, p.z * s);
+        `,
+      )
+      .replace(
+        "#include <project_vertex>",
+        `
+        vec4 worldPos = modelMatrix * vec4(transformed, 1.0);
 
-      float inv = 1.0 / (dist + 0.2);
-      float wobble = 1.0 + 0.35 * sin(uTime * 2.0 + dist * 6.0);
-      float angle = uSwirl * falloff * inv * wobble;
+        vec3 d = worldPos.xyz - uDeformPos;
+        float dist = length(d);
+        float r = max(uDeformRadius, 1e-4);
+        float falloff = exp(-(dist * dist) / (2.0 * r * r));
 
-      float c = cos(angle);
-      float sA = sin(angle);
-      rel = mat2(c, -sA, sA, c) * rel;
-      worldPos.xz = uDeformPos.xz + rel;
+        vec2 rel = worldPos.xz - uDeformPos.xz;
 
-      vec3 dir = d / (dist + 1e-4);
-      float pulse = 0.6 + 0.4 * sin(uTime * 3.0 - dist * 7.0);
-      worldPos.xyz += dir * (uRadial * falloff * pulse);
+        float inv = 1.0 / (dist + 0.2);
+        float wobble = 1.0 + 0.35 * sin(uTime * 2.0 + dist * 6.0);
+        float angle = uSwirl * falloff * inv * wobble;
 
-      vec3 timeVec = vec3(cos(uTime), sin(uTime), cos(uTime * 2.0));
-      vec3 n = hashNoise3(worldPos.xyz * uChaosFreq + timeVec);
-      vec3 swirlBias = vec3(-dir.z, 0.15, dir.x);
-      worldPos.xyz += (0.7 * n + 0.3 * swirlBias) * (uChaos * falloff);
+        float c = cos(angle);
+        float sA = sin(angle);
+        rel = mat2(c, -sA, sA, c) * rel;
+        worldPos.xz = uDeformPos.xz + rel;
 
-      vec4 mvPosition = viewMatrix * worldPos;
-      gl_Position = projectionMatrix * mvPosition;
-      `,
+        vec3 dir = d / (dist + 1e-4);
+        float pulse = 0.6 + 0.4 * sin(uTime * 3.0 - dist * 7.0);
+        worldPos.xyz += dir * (uRadial * falloff * pulse);
+
+        vec3 timeVec = vec3(cos(uTime), sin(uTime), cos(uTime * 2.0));
+        vec3 n = hashNoise3(worldPos.xyz * uChaosFreq + timeVec);
+        vec3 swirlBias = vec3(-dir.z, 0.15, dir.x);
+        worldPos.xyz += (0.7 * n + 0.3 * swirlBias) * (uChaos * falloff);
+
+        vGlow = falloff;
+
+        vec4 mvPosition = viewMatrix * worldPos;
+        vDepth = -mvPosition.z;
+        gl_Position = projectionMatrix * mvPosition;
+        `,
+      );
+
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <logdepthbuf_vertex>",
+      `gl_PointSize *= mix(0.6, 1.8, vRand);
+      gl_PointSize = max(gl_PointSize, 1.3);
+      #include <logdepthbuf_vertex>`,
     );
 
-  shader.vertexShader = shader.vertexShader.replace(
-    "#include <logdepthbuf_vertex>",
-    `gl_PointSize = max(gl_PointSize, 1.5);
-    #include <logdepthbuf_vertex>`,
-  );
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        uniform float uTime;
+        uniform vec3 uAccent;
+        varying float vRand;
+        varying float vDepth;
+        varying float vGlow;
+        `,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        float dCoord = length(gl_PointCoord - vec2(0.5));
+        float aSoft = exp(-10.0 * dCoord * dCoord) + 0.65 * exp(-55.0 * dCoord * dCoord);
+        float tw = 0.8 + 0.2 * sin(uTime * (18.0 + floor(vRand * 14.0)) + vRand * 40.0);
+        float aFade = mix(0.4, 1.0, exp(-0.06 * max(vDepth - 3.0, 0.0)));
+        diffuseColor.rgb = mix(diffuseColor.rgb, uAccent, vGlow * 0.75);
+        diffuseColor.rgb *= 0.8 + 0.4 * vRand;
+        diffuseColor.a = min(
+          1.0,
+          diffuseColor.a * aSoft * tw * aFade * (1.0 + 1.4 * vGlow)
+        );
+        `,
+      );
 
-  shader.fragmentShader = shader.fragmentShader.replace(
-    "#include <color_fragment>",
-    `#include <color_fragment>
-      float d = length(gl_PointCoord - vec2(0.5));
-      if (d > 0.5) discard;
-    `,
-  );
+    material.userData.shader = shader;
+  };
+}
 
-  material.userData.shader = shader;
-};
+applyColumnShader(glowMaterial, GLOW_ACCENT);
+applyColumnShader(inkMaterial, INK_ACCENT);
 
 const group = new THREE.Group();
 scene.add(group);
@@ -305,20 +362,34 @@ group.rotation.x = THREE.MathUtils.degToRad(params.tiltX);
 group.rotation.z = THREE.MathUtils.degToRad(params.tiltZ);
 
 const chunks = [];
+const glowLayers = [];
+const inkLayers = [];
 let seedCounter = 1;
 
 for (let i = 0; i < numChunks; i++) {
   const seed = seedCounter++;
   const geo = makeChunkGeometry(seed);
-  const pts = new THREE.Points(geo, material);
+
+  const glowPts = new THREE.Points(geo, glowMaterial);
+  glowPts.frustumCulled = false;
+  const inkPts = new THREE.Points(geo, inkMaterial);
+  inkPts.frustumCulled = false;
+  inkPts.renderOrder = 1;
+
+  const chunk = new THREE.Group();
+  chunk.add(glowPts);
+  chunk.add(inkPts);
+
   const baseY = (i - (numChunks - 1) / 2) * chunkHeight;
-  pts.position.y = baseY;
-  pts.frustumCulled = false;
-  pts.userData.baseY = baseY;
-  pts.userData.seedOffset = i;
-  pts.userData.seed = seed;
-  group.add(pts);
-  chunks.push(pts);
+  chunk.position.y = baseY;
+  chunk.userData.baseY = baseY;
+  chunk.userData.seedOffset = i;
+  chunk.userData.seed = seed;
+  chunk.userData.geo = geo;
+  group.add(chunk);
+  chunks.push(chunk);
+  glowLayers.push(glowPts);
+  inkLayers.push(inkPts);
 }
 
 const loopDuration = Math.max(1, Number(params.loopDuration || 60));
@@ -378,28 +449,6 @@ function getChunkWraps(baseY, scrollOffset) {
   return Math.floor(distance / stackHeight);
 }
 
-// category transition
-// const FX_BASE = {
-//   radial: params.radialStrength,
-//   chaos: params.chaosStrength,
-//   deformRadius: params.deformRadius,
-// };
-// const FX_BURST = {
-//   radial: params.radialStrength * 1.5,
-//   chaos: params.chaosStrength * 5,
-//   deformRadius: params.deformRadius * 1.2,
-// };
-// const FX_DURATION = 1.4;
-// let fxStart = -Infinity;
-//
-// window.addEventListener("column-fx-burst", () => {
-//   fxStart = performance.now() / 1000;
-// });
-
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
-
 function animate() {
   requestAnimationFrame(animate);
 
@@ -408,20 +457,32 @@ function animate() {
   const elapsed = getElapsed();
   const timePhase = wrap(elapsed, loopDuration) * timeScale;
 
-  const sh = material.userData.shader;
-  if (sh) {
-    sh.uniforms.uTime.value = timePhase;
+  const themeRaw =
+    (performance.now() / 1000 - themeStartTime) / THEME_DURATION;
+  const themeT = Math.min(1, Math.max(0, themeRaw));
+  const themeEased = 1 - Math.pow(1 - themeT, 3);
+  themeCurrentBg.copy(themeFromBg).lerp(themeToBg, themeEased);
+  themeCurrentParticle
+    .copy(themeFromParticle)
+    .lerp(themeToParticle, themeEased);
+  themeMixCurrent = themeMixFrom + (themeMixTo - themeMixFrom) * themeEased;
 
-    // category transition
-    // const fxT = (performance.now() / 1000 - fxStart) / FX_DURATION;
-    // const env = fxT >= 0 && fxT <= 1 ? Math.sin(Math.PI * fxT) : 0;
-    // sh.uniforms.uRadial.value = lerp(FX_BASE.radial, FX_BURST.radial, env);
-    // sh.uniforms.uChaos.value = lerp(FX_BASE.chaos, FX_BURST.chaos, env);
-    // sh.uniforms.uDeformRadius.value = lerp(
-    //   FX_BASE.deformRadius,
-    //   FX_BURST.deformRadius,
-    //   env,
-    // );
+  renderer.setClearColor(themeCurrentBg, 1);
+  document.body.style.backgroundColor = "#" + themeCurrentBg.getHexString();
+  marker.material.color.copy(themeCurrentParticle);
+
+  glowMaterial.opacity = GLOW_OPACITY * (1 - themeMixCurrent);
+  inkMaterial.opacity = INK_OPACITY * themeMixCurrent;
+  const glowVisible = glowMaterial.opacity > 0.003;
+  const inkVisible = inkMaterial.opacity > 0.003;
+  for (const pts of glowLayers) pts.visible = glowVisible;
+  for (const pts of inkLayers) pts.visible = inkVisible;
+
+  for (const m of [glowMaterial, inkMaterial]) {
+    const sh = m.userData.shader;
+    if (sh) {
+      sh.uniforms.uTime.value = timePhase;
+    }
   }
 
   if (useOrbit) {
@@ -442,7 +503,7 @@ function animate() {
     const seed = 1 + chunk.userData.seedOffset + wraps;
 
     if (seed !== chunk.userData.seed) {
-      regenerateChunkGeometry(chunk.geometry, seed);
+      regenerateChunkGeometry(chunk.userData.geo, seed);
       chunk.userData.seed = seed;
     }
 
@@ -450,19 +511,6 @@ function animate() {
     chunk.position.y =
       wrap(unwrappedY + halfStack, stackHeight) - halfStack;
   }
-
-  const themeRaw =
-    (performance.now() / 1000 - themeStartTime) / THEME_DURATION;
-  const themeT = Math.min(1, Math.max(0, themeRaw));
-  const themeEased = 1 - Math.pow(1 - themeT, 3);
-  themeCurrentBg.copy(themeFromBg).lerp(themeToBg, themeEased);
-  themeCurrentParticle
-    .copy(themeFromParticle)
-    .lerp(themeToParticle, themeEased);
-  renderer.setClearColor(themeCurrentBg, 1);
-  document.body.style.backgroundColor = "#" + themeCurrentBg.getHexString();
-  material.color.copy(themeCurrentParticle);
-  marker.material.color.copy(themeCurrentParticle);
 
   renderer.render(scene, camera);
 }

@@ -11,7 +11,6 @@
     btn.addEventListener("click", () => {
       if (btn.classList.contains("active")) return;
       show(btn.dataset.category);
-      // category transition - window.dispatchEvent(new CustomEvent("column-fx-burst"));
     });
   });
 
