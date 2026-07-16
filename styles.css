@@ -150,6 +150,57 @@ body {
   margin: 0 0 12px;
 }
 
+#frame-right .project {
+  margin-bottom: 6px;
+}
+
+#frame-right .project:last-child {
+  margin-bottom: 0;
+}
+
+#frame-right .project-name {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 0.65;
+  transition: opacity 0.2s ease, color 0.6s cubic-bezier(0.33, 1, 0.67, 1);
+}
+
+#frame-right .project-name:hover {
+  opacity: 0.9;
+}
+
+#frame-right .project.open .project-name {
+  opacity: 1;
+  color: var(--text);
+}
+
+#frame-right .project-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s ease, opacity 0.3s ease;
+}
+
+#frame-right .project.open .project-body {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+#frame-right .project-body-inner {
+  overflow: hidden;
+}
+
+#frame-right .project-body p {
+  margin: 6px 0 0;
+}
+
 #frame-right .meta {
   font-size: 14px;
   opacity: 0.7;
