@@ -23,10 +23,18 @@
     document.getElementById("frame-right").scrollTop = 0;
   }
 
+  try {
+    const saved = localStorage.getItem("category");
+    if (saved && document.querySelector(`.panel[data-content="${saved}"]`)) show(saved);
+  } catch (e) {}
+
   buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       if (btn.classList.contains("active")) return;
       show(btn.dataset.category);
+      try {
+        localStorage.setItem("category", btn.dataset.category);
+      } catch (e) {}
     });
   });
 
