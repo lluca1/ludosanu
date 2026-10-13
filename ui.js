@@ -20,6 +20,7 @@
   function show(name) {
     buttons.forEach((b) => b.classList.toggle("active", b.dataset.category === name));
     panels.forEach((p) => p.classList.toggle("active", p.dataset.content === name));
+    document.getElementById("frame-right").scrollTop = 0;
   }
 
   buttons.forEach((btn) => {

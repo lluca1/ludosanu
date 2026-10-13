@@ -106,13 +106,19 @@ body {
 
 #frame-right {
   grid-column: 2 / 3;
-  grid-row: 3 / 4;
+  grid-row: 2 / 4;
   align-self: end;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
   text-align: right;
   font-size: 18px;
   line-height: 1.55;
   color: var(--muted);
-  max-width: 380px;
+  max-width: 480px;
   display: grid;
   transition: color 0.6s cubic-bezier(0.33, 1, 0.67, 1);
 }
@@ -120,19 +126,16 @@ body {
 #frame-right .panel {
   grid-column: 1;
   grid-row: 1;
-  display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  opacity: 0;
-  visibility: hidden;
+  display: none;
   /* category transition
   transition: opacity 0.9s ease, visibility 0s linear 0.9s;
   */
 }
 
 #frame-right .panel.active {
-  opacity: 1;
-  visibility: visible;
+  display: flex;
   /* category transition
   transition: opacity 0.9s ease 0.9s, visibility 0s linear 0.9s;
   */
@@ -154,6 +157,7 @@ body {
 
 #frame-right .project {
   margin-bottom: 6px;
+  transition: margin 0.35s ease;
 }
 
 #frame-right .project:last-child {
@@ -199,14 +203,29 @@ body {
   overflow: hidden;
 }
 
+#frame-right .project.open:not(:first-child) {
+  margin-top: 18px;
+}
+
+#frame-right .project.open:not(:last-child) {
+  margin-bottom: 24px;
+}
+
 #frame-right .project-body p,
 #frame-right .project-body ul {
   margin: 6px 0 0;
 }
 
 #frame-right .meta {
-  font-size: 14px;
+  font-size: 15px;
   opacity: 0.7;
+}
+
+#frame-right .context {
+  font-weight: 500;
+  color: var(--text);
+  opacity: 1;
+  transition: color 0.6s cubic-bezier(0.33, 1, 0.67, 1);
 }
 
 #frame-right a {
@@ -280,10 +299,11 @@ body {
 
   #frame-right {
     grid-column: 1 / 2;
-    grid-row: 2 / 3;
+    grid-row: 2 / 4;
     align-self: start;
     text-align: left;
     max-width: none;
+    max-height: calc(100% - 24px);
     margin-top: 24px;
     font-size: 16px;
   }
