@@ -2,13 +2,6 @@
   const buttons = document.querySelectorAll("#frame-categories button");
   const panels = document.querySelectorAll("#frame-right .panel");
 
-  const ageEl = document.getElementById("age");
-  if (ageEl) {
-    const age = new Date().getFullYear() - 2008;
-    const article = /^(8|11$|18$)/.test(String(age)) ? "an" : "a";
-    ageEl.textContent = article + " " + age;
-  }
-
   const projects = [
     {
       name: "kana trainer",

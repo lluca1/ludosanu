@@ -150,6 +150,16 @@ body {
   margin: 0 0 12px;
 }
 
+#frame-right ul {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+#frame-right li + li {
+  margin-top: 4px;
+}
+
 #frame-right .project {
   margin-bottom: 6px;
 }
