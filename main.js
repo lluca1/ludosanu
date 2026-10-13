@@ -29,9 +29,11 @@ const cameraTarget = new THREE.Vector3(
   params.targetZ,
 );
 
+const frame = document.getElementById("frame");
+
 const camera = new THREE.PerspectiveCamera(
   params.fov,
-  window.innerWidth / window.innerHeight,
+  frame.clientWidth / frame.clientHeight,
   0.1,
   500,
 );
@@ -47,14 +49,12 @@ function applyViewportTarget() {
 }
 mobileLayoutQuery.addEventListener("change", applyViewportTarget);
 
-const maxPixelRatio = mobileOptimizedMode ? 1.5 : 2;
+const maxPixelRatio = isTouchDevice ? 1.5 : 2;
 const renderer = new THREE.WebGLRenderer({
   antialias: false,
   powerPreference: "high-performance",
 });
-const frame = document.getElementById("frame");
-const frameRect = frame.getBoundingClientRect();
-renderer.setSize(frameRect.width, frameRect.height);
+renderer.setSize(frame.clientWidth, frame.clientHeight);
 applyViewportTarget();
 
 function updateRendererQuality() {
@@ -78,9 +78,28 @@ const deformPos = new THREE.Vector3(
   params.deformZ,
 );
 
-const marker = new THREE.Mesh(
-  new THREE.SphereGeometry(0.045, 12, 12),
-  new THREE.MeshBasicMaterial({ color: 0xb8b8b8 }),
+const MARKER_RADIUS = 0.045;
+const markerMaterial = new THREE.PointsMaterial({
+  size: (2 * MARKER_RADIUS) / Math.tan(THREE.MathUtils.degToRad(params.fov) / 2),
+  sizeAttenuation: true,
+  color: 0xb8b8b8,
+  transparent: true,
+});
+markerMaterial.onBeforeCompile = (shader) => {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <color_fragment>",
+    `#include <color_fragment>
+    float dM = length(gl_PointCoord - vec2(0.5));
+    diffuseColor.a *= 1.0 - smoothstep(0.5 - fwidth(dM), 0.5, dM);
+    `,
+  );
+};
+const marker = new THREE.Points(
+  new THREE.BufferGeometry().setAttribute(
+    "position",
+    new THREE.BufferAttribute(new Float32Array(3), 3),
+  ),
+  markerMaterial,
 );
 marker.position.copy(deformPos);
 scene.add(marker);
@@ -516,10 +535,9 @@ function animate() {
 }
 
 window.addEventListener("resize", () => {
-  const rect = frame.getBoundingClientRect();
-  camera.aspect = rect.width / rect.height;
+  camera.aspect = frame.clientWidth / frame.clientHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(rect.width, rect.height);
+  renderer.setSize(frame.clientWidth, frame.clientHeight);
   updateRendererQuality();
   applyViewportTarget();
 });
