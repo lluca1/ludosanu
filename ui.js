@@ -96,7 +96,9 @@
       const name = btn.dataset.theme;
       setActiveTheme(name);
       document.documentElement.setAttribute("data-theme", name);
-      localStorage.setItem("theme", name);
+      try {
+        localStorage.setItem("theme", name);
+      } catch (e) {}
       window.dispatchEvent(
         new CustomEvent("theme-change", { detail: name }),
       );
